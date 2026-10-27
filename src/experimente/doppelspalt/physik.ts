@@ -106,9 +106,13 @@ export function winkel(aufbau: Aufbau, y: number): number {
 
 /** Gangunterschied Δs der beiden Wege (Spaltmitte → Schirmpunkt), exakt gerechnet. */
 export function gangunterschied(aufbau: Aufbau, y: number): number {
-  const L = aufbau.schirmabstand;
-  const unten = Math.hypot(L, y - spaltMitte(aufbau, 'unten'));
-  const oben = Math.hypot(L, y - spaltMitte(aufbau, 'oben'));
+  return gangunterschiedAn(aufbau, aufbau.schirmabstand, y);
+}
+
+/** Gangunterschied zu einem beliebigen Punkt (x, y) hinter der Blende: Weg unten − Weg oben. */
+export function gangunterschiedAn(aufbau: Aufbau, x: number, y: number): number {
+  const unten = Math.hypot(x, y - spaltMitte(aufbau, 'unten'));
+  const oben = Math.hypot(x, y - spaltMitte(aufbau, 'oben'));
   return unten - oben;
 }
 

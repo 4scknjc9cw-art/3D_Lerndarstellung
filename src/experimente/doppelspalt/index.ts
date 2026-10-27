@@ -1,8 +1,10 @@
 // Der Doppelspalt als Experiment im Sinne der Schablone (kern/experiment.ts).
 
 import type { Einheit, Experiment } from '../../kern/experiment';
-import type { Werte } from '../../kern/parameter';
-import { type Aufbau, maximumWinkel, standardAufbau, streifenabstand } from './physik';
+import { aufbauAus } from './aufbau';
+import { auswahlInhalt } from './auswahl';
+import { darstellungsAufbau } from './darstellung';
+import { maximumWinkel, standardAufbau, streifenabstand } from './physik';
 import { DoppelspaltSzene } from './szene';
 import { tourElektronen } from './tour-elektronen';
 import { tourQuanten } from './tour-quanten';
@@ -13,18 +15,9 @@ const MM2: Einheit = { zeichen: 'mm', faktor: 1e-3, stellen: 2 };
 const MM3: Einheit = { zeichen: 'mm', faktor: 1e-3, stellen: 3 };
 const MM1: Einheit = { zeichen: 'mm', faktor: 1e-3, stellen: 1 };
 const M2: Einheit = { zeichen: 'm', faktor: 1, stellen: 2 };
+const ZAHL: Einheit = { zeichen: '', faktor: 1, stellen: 0 };
+const GRAD1: Einheit = { zeichen: '°', faktor: Math.PI / 180, stellen: 1 };
 const GRAD: Einheit = { zeichen: '°', faktor: Math.PI / 180, stellen: 2 };
-
-/** Parameter → physikalischer Aufbau (echte Werte). */
-export function aufbauAus(werte: Werte): Aufbau {
-  return {
-    wellenlaenge: werte.lambda,
-    spaltabstand: werte.d,
-    spaltbreite: werte.b,
-    schirmabstand: werte.L,
-    quellenJeSpalt: standardAufbau.quellenJeSpalt,
-  };
-}
 
 export const doppelspalt: Experiment = {
   titel: 'Doppelspalt',
@@ -98,10 +91,23 @@ export const doppelspalt: Experiment = {
       animiere: (t) => szene.animiere(t),
       teile: [...szene.teile.keys()],
       zeige: (teile) => szene.zeige(teile),
+      trefferpunkt: (strahl) => szene.trefferpunkt(strahl),
+      zeigeAuswahl: (punkt) => szene.zeigeAuswahl(punkt),
     };
   },
 
   ansicht: { position: [-7, 13, 18], ziel: [3.5, 0, 0] },
+
+  draufsicht(werte) {
+    // Von oben: Bildschirm-rechts = Ausbreitung (+x), Bildschirm-oben = −z. Höhe so, dass die
+    // ganze Breite (16) bei 45° Blickwinkel hineinpasst. Winziger z-Versatz, weil ein Blick
+    // exakt senkrecht nach unten für die Kamerasteuerung keine eindeutige Richtung hat.
+    const L = darstellungsAufbau(aufbauAus(werte)).schirmabstand;
+    const mitte = (L - 6.5) / 2;
+    return { position: [mitte, 22, 0.01], ziel: [mitte, 0, 0] };
+  },
+
+  auswahl: auswahlInhalt,
   touren: [tourWelle, tourQuanten, tourElektronen],
 
   groessen(werte) {
@@ -113,6 +119,10 @@ export const doppelspalt: Experiment = {
       L: { wert: werte.L, einheit: M2 },
       deltaX: { wert: streifenabstand(aufbau), einheit: MM1 },
       theta1: { wert: maximumWinkel(aufbau, 1), einheit: GRAD },
+      // Wie viele Wellenlängen breit ein Spalt in echt ist, und bis zu welchem Winkel das
+      // Licht hinter einem Spalt auffächert (erstes Einzelspalt-Minimum: sin θ = λ/b).
+      bDurchLambda: { wert: werte.b / werte.lambda, einheit: ZAHL },
+      thetaHuelle: { wert: Math.asin(Math.min(1, werte.lambda / werte.b)), einheit: GRAD1 },
     };
   },
 

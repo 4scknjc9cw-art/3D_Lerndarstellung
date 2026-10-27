@@ -76,6 +76,29 @@
       .regler-wert { font-variant-numeric: tabular-nums; color: var(--akzent); }
       .regler input[type='range'] { width: 100%; accent-color: var(--akzent); }
       .zeitleiste { left: calc(50% - 205px); }
+      .beschriftungen { position: fixed; top: 0; left: 0; pointer-events: none; }
+      .beschriftung {
+        font: 600 15px system-ui, sans-serif; color: var(--text);
+        background: rgba(19, 19, 21, 0.75); padding: 1px 6px; border-radius: 5px;
+      }
+      .beschriftung.akzent { color: var(--akzent); }
+      .ansicht-leiste { display: flex; gap: 4px; margin: 10px 0 4px; }
+      .ansicht-leiste[hidden] { display: none; }
+      .ansicht-leiste button {
+        flex: 1; background: rgba(255, 255, 255, 0.06); padding: 7px 0; border-radius: 7px;
+        font-size: 14px;
+      }
+      .ansicht-leiste button.aktiv { background: rgba(255, 140, 46, 0.16); color: var(--akzent); font-weight: 600; }
+      .auswahl {
+        margin: 14px 0 6px; padding: 10px 12px; border-radius: 10px;
+        background: rgba(255, 140, 46, 0.07); border: 1px solid rgba(255, 140, 46, 0.35);
+      }
+      .auswahl[hidden] { display: none; }
+      .auswahl-kopf {
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--akzent);
+      }
+      .auswahl-kopf button { background: transparent; font-size: 18px; line-height: 1; padding: 0 4px; }
       .fps {
         position: fixed; top: 16px; right: 424px; font: 14px monospace;
         background: rgba(0, 0, 0, 0.6); padding: 4px 8px; border-radius: 6px;

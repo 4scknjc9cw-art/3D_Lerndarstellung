@@ -4,7 +4,8 @@ import katex from 'katex';
 import { describe, expect, it } from 'vitest';
 import { alsTex, alsText, setzeEin } from '../../kern/format';
 import { darstellungsAufbau } from './darstellung';
-import { aufbauAus, doppelspalt } from './index';
+import { aufbauAus } from './aufbau';
+import { doppelspalt } from './index';
 import { standardAufbau } from './physik';
 import { MAX_QUELLEN } from './wellenfeld';
 

@@ -1,11 +1,13 @@
 // Erklärfeld: Formeln mit eingesetzten Zahlen, ein Text mit Live-Werten und — nach jeder
 // Änderung — der Satz, WARUM sich das Bild so ändert. Was sich gerade geändert hat, leuchtet
 // kurz orange auf, damit man den Zusammenhang Regler → Formel → Bild sieht.
-// Der Inhalt ist austauschbar: jeder Tour-Schritt bringt seinen eigenen mit.
+// Der Inhalt ist austauschbar: jeder Tour-Schritt bringt seinen eigenen mit. Darunter
+// erscheint nach einem Klick ins Bild die Erklärung zum angeklickten Punkt.
 
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import type { Experiment } from '../experiment';
+import type { Auswahl } from '../auswahl';
+import type { Experiment, Groesse } from '../experiment';
 import { alsTex, alsText, setzeEin } from '../format';
 import type { Parameter } from '../parameter';
 
@@ -17,11 +19,35 @@ export interface Inhalt {
   text: string;
 }
 
+/** Text und Formeln mit eingesetzten Werten in einen Behälter zeichnen. */
+function zeichneInhalt(
+  behaelter: HTMLElement,
+  inhalt: Inhalt,
+  groessen: Record<string, Groesse>,
+  leuchtet: (name: string) => boolean,
+): void {
+  // Leerzeile im Text = neuer Absatz. textContent statt innerHTML: Text ist nie HTML.
+  const absaetze = setzeEin(inhalt.text, groessen, (g) => alsText(g)).split(/\n\s*\n/);
+  const elemente: HTMLElement[] = absaetze.map((a) =>
+    Object.assign(document.createElement('p'), { textContent: a.trim() }),
+  );
+  for (const vorlage of inhalt.formeln ?? []) {
+    const tex = setzeEin(vorlage, groessen, (g, name) =>
+      leuchtet(name) ? `\\textcolor{${AKZENT}}{${alsTex(g)}}` : alsTex(g),
+    );
+    const el = Object.assign(document.createElement('div'), { className: 'formel' });
+    katex.render(tex, el, { throwOnError: true, displayMode: true });
+    elemente.push(el);
+  }
+  behaelter.replaceChildren(...elemente);
+}
+
 export class Erklaerfeld {
   readonly element = document.createElement('div');
-  private formelBereich = document.createElement('div');
-  private text = document.createElement('div');
+  private haupt = document.createElement('div');
   private warum = document.createElement('p');
+  private auswahlKasten = document.createElement('div');
+  private auswahlInhalt = document.createElement('div');
   private inhalt: Inhalt = { text: '' };
   private leuchtend: string | null = null;
   private leuchtTimer = 0;
@@ -30,11 +56,19 @@ export class Erklaerfeld {
   constructor(
     private experiment: Experiment,
     private parameter: Parameter,
+    private auswahl: Auswahl,
   ) {
     this.element.className = 'erklaerung';
     this.warum.className = 'warum';
-    this.text.className = 'text';
-    this.element.append(this.text, this.formelBereich, this.warum);
+    this.auswahlKasten.className = 'auswahl';
+    const kopf = Object.assign(document.createElement('div'), { className: 'auswahl-kopf' });
+    const titel = Object.assign(document.createElement('span'), { textContent: 'Angeklickter Punkt' });
+    const zu = Object.assign(document.createElement('button'), { textContent: '×', title: 'Entfernen' });
+    zu.addEventListener('click', () => auswahl.setze(null));
+    kopf.append(titel, zu);
+    this.auswahlKasten.append(kopf, this.auswahlInhalt);
+    // Ergebnis des Klicks oben, damit man es sieht, ohne zu scrollen.
+    this.element.append(this.auswahlKasten, this.haupt, this.warum);
     this.parameterNamen = new Set(experiment.parameter.map((p) => p.schluessel));
 
     parameter.beobachte((_, geaendert) => {
@@ -50,6 +84,7 @@ export class Erklaerfeld {
       }
       this.zeichne();
     });
+    auswahl.beobachte(() => this.zeichne());
   }
 
   /** Neuer Inhalt (z. B. neuer Tour-Schritt): der alte „warum"-Satz gehört nicht mehr dazu. */
@@ -57,30 +92,22 @@ export class Erklaerfeld {
     this.inhalt = inhalt;
     this.leuchtend = null;
     this.warum.classList.remove('sichtbar');
-    this.formelBereich.replaceChildren(
-      ...(inhalt.formeln ?? []).map(() => Object.assign(document.createElement('div'), { className: 'formel' })),
-    );
     this.zeichne();
   }
 
   private zeichne(): void {
-    const groessen = this.experiment.groessen(this.parameter.alle);
+    const werte = this.parameter.alle;
+    const groessen = this.experiment.groessen(werte);
     // Leuchten: der geänderte Parameter und alle berechneten Größen (die hängen von ihm ab).
     const leuchtet = (name: string) =>
       this.leuchtend !== null && (name === this.leuchtend || !this.parameterNamen.has(name));
-    (this.inhalt.formeln ?? []).forEach((vorlage, i) => {
-      const tex = setzeEin(vorlage, groessen, (g, name) =>
-        leuchtet(name) ? `\\textcolor{${AKZENT}}{${alsTex(g)}}` : alsTex(g),
-      );
-      katex.render(tex, this.formelBereich.children[i] as HTMLElement, {
-        throwOnError: true,
-        displayMode: true,
-      });
-    });
-    // Leerzeile im Text = neuer Absatz. textContent statt innerHTML: Text ist nie HTML.
-    const absaetze = setzeEin(this.inhalt.text, groessen, (g) => alsText(g)).split(/\n\s*\n/);
-    this.text.replaceChildren(
-      ...absaetze.map((a) => Object.assign(document.createElement('p'), { textContent: a.trim() })),
-    );
+    zeichneInhalt(this.haupt, this.inhalt, groessen, leuchtet);
+
+    const punkt = this.auswahl.aktuell;
+    this.auswahlKasten.hidden = !punkt;
+    if (punkt) {
+      const a = this.experiment.auswahl(werte, punkt);
+      zeichneInhalt(this.auswahlInhalt, a, { ...groessen, ...a.groessen }, leuchtet);
+    }
   }
 }

@@ -8,14 +8,19 @@ function zahl(g: Groesse): string {
   return (g.wert / g.einheit.faktor).toFixed(g.einheit.stellen);
 }
 
-/** "0,10 mm" */
+/** "0,10 mm"; reine Zahlen (leeres Zeichen) ohne Leerzeichen dahinter. */
 export function alsText(g: Groesse): string {
-  return `${zahl(g).replace('.', ',')} ${g.einheit.zeichen}`;
+  const z = zahl(g).replace('.', ',');
+  return g.einheit.zeichen ? `${z} ${g.einheit.zeichen}` : z;
 }
 
 /** "0{,}10\,\mathrm{mm}" — {,} verhindert, dass TeX nach dem Komma eine Lücke setzt. */
 export function alsTex(g: Groesse): string {
-  const einheit = g.einheit.zeichen === '°' ? '^\\circ' : `\\,\\mathrm{${g.einheit.zeichen}}`;
+  const { zeichen, tex } = g.einheit;
+  let einheit = '';
+  if (tex !== undefined) einheit = tex;
+  else if (zeichen === '°') einheit = '^\\circ';
+  else if (zeichen) einheit = `\\,\\mathrm{${zeichen}}`;
   return `${zahl(g).replace('.', '{,}')}${einheit}`;
 }
 

@@ -1,6 +1,10 @@
 // Seitenfeld: oben Umschalter Tour / Frei, darunter Erklärung und Regler, unten Vor/Zurück.
 // Beide Modi teilen sich EIN Erklärfeld und EINE Reglerliste — sie zeigen nur anderes.
+// Der Umschalter 3D / Draufsicht erscheint nur, wo er hilft (Kurt): im Tour-Schritt mit
+// `draufsicht: true` und im freien Modus.
 
+import type { Auswahl } from '../auswahl';
+import type { Ansicht } from '../tour';
 import type { Experiment, ExperimentSzene } from '../experiment';
 import type { Kamerafahrt } from '../kamera';
 import type { Parameter } from '../parameter';
@@ -23,7 +27,12 @@ export function seitenfeld(
   parameter: Parameter,
   szene: ExperimentSzene,
   fahrt: Kamerafahrt,
-): { element: HTMLElement; starte(modus: Modus, schritt?: number): void } {
+  auswahl: Auswahl,
+): {
+  element: HTMLElement;
+  starte(modus: Modus, schritt?: number): void;
+  setzeDraufsicht(an: boolean, sofort?: boolean): void;
+} {
   const feld = document.createElement('aside');
   feld.className = 'seitenfeld';
 
@@ -50,7 +59,13 @@ export function seitenfeld(
   fortschritt.className = 'fortschritt';
   kopf.append(fortschritt, titel);
 
-  const erklaerung = new Erklaerfeld(experiment, parameter);
+  const ansichtLeiste = document.createElement('div');
+  ansichtLeiste.className = 'ansicht-leiste';
+  const knopf3d = knopf('3D-Ansicht', '', () => setzeDraufsicht(false));
+  const knopfOben = knopf('Draufsicht', '', () => setzeDraufsicht(true));
+  ansichtLeiste.append(knopf3d, knopfOben);
+
+  const erklaerung = new Erklaerfeld(experiment, parameter, auswahl);
   const reglerTitel = document.createElement('h2');
   reglerTitel.textContent = 'Ausprobieren';
   const regler = new ReglerListe(parameter, experiment.parameter);
@@ -63,10 +78,26 @@ export function seitenfeld(
 
   const inhalt = document.createElement('div');
   inhalt.className = 'inhalt';
-  inhalt.append(kopf, erklaerung.element, reglerTitel, regler.element);
+  inhalt.append(kopf, ansichtLeiste, erklaerung.element, reglerTitel, regler.element);
   feld.append(modusLeiste, inhalt, navigation);
 
   let modus: Modus = 'tour';
+  /** Die 3D-Ansicht, zu der „3D-Ansicht" zurückkehrt: die des Schritts bzw. des freien Modus. */
+  let ansicht3d: Ansicht = experiment.ansicht;
+
+  function setzeDraufsicht(an: boolean, sofort = false): void {
+    knopf3d.classList.toggle('aktiv', !an);
+    knopfOben.classList.toggle('aktiv', an);
+    fahrt.fahre(an ? experiment.draufsicht(parameter.alle) : ansicht3d, sofort);
+  }
+
+  /** Neuer Schritt oder Modus: Klick-Auswahl weg, zurück in 3D, Umschalter nur wo erlaubt. */
+  function neueAnsicht(ansicht: Ansicht, umschalterErlaubt: boolean): void {
+    ansicht3d = ansicht;
+    auswahl.setze(null);
+    ansichtLeiste.hidden = !umschalterErlaubt;
+    setzeDraufsicht(false);
+  }
 
   const zeigeSchritt = (schritt: TourSchritt, index: number) => {
     titel.textContent = schritt.titel;
@@ -74,7 +105,7 @@ export function seitenfeld(
     erklaerung.setzeInhalt(schritt);
     reglerTitel.hidden = !regler.zeigeNur(schritt.freieRegler ?? []);
     szene.zeige(schritt.sichtbar ?? null);
-    fahrt.fahre(schritt.kamera);
+    neueAnsicht(schritt.kamera, schritt.draufsicht === true);
     zurueck.disabled = index === 0;
     weiter.disabled = index === spieler!.anzahl - 1;
     inhalt.scrollTop = 0;
@@ -96,7 +127,7 @@ export function seitenfeld(
       erklaerung.setzeInhalt(experiment.erklaerung);
       reglerTitel.hidden = !regler.zeigeNur(null);
       szene.zeige(null);
-      fahrt.fahre(experiment.ansicht);
+      neueAnsicht(experiment.ansicht, true);
     }
   }
 
@@ -114,5 +145,6 @@ export function seitenfeld(
       if (start === 'tour' && spieler) spieler.gehe(schritt);
       setzeModus(start);
     },
+    setzeDraufsicht,
   };
 }

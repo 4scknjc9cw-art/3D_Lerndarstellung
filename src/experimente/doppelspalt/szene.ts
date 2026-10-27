@@ -2,8 +2,11 @@
 // Alles hier ist im Darstellungsmaßstab (siehe darstellung.ts).
 
 import * as THREE from 'three';
+import type { Punkt } from '../../kern/experiment';
 import { darstellungsAufbau } from './darstellung';
 import { wellenlaengeZuFarbe } from './farbe';
+import { konstruiere } from './konstruktion';
+import { KonstruktionsBild } from './konstruktionsbild';
 import { type Aufbau, schirmIntensitaet } from './physik';
 import { setzeAufbau, wellenMaterial } from './wellenfeld';
 
@@ -28,6 +31,9 @@ export class DoppelspaltSzene {
     1,
   );
   private schirm: THREE.Mesh;
+  private konstruktion = new KonstruktionsBild();
+  private bild?: Aufbau;
+  private auswahl: Punkt | null = null;
 
   constructor() {
     this.schirmTextur.colorSpace = THREE.SRGBColorSpace;
@@ -56,7 +62,7 @@ export class DoppelspaltSzene {
     // Ebene zeigt danach in −x (zur Blende hin); u läuft dabei in +z.
     schirmGeo.rotateY(-Math.PI / 2);
     this.schirm = new THREE.Mesh(schirmGeo, new THREE.MeshBasicMaterial({ map: this.schirmTextur }));
-    this.gruppe.add(this.schirm);
+    this.gruppe.add(this.schirm, this.konstruktion.gruppe);
 
     this.teile = new Map<string, THREE.Object3D>([
       ['laser', laserGruppe],
@@ -99,6 +105,54 @@ export class DoppelspaltSzene {
 
     this.baueBlende(bild);
     this.zeichneSchirm(bild, farbe);
+    this.bild = bild;
+    // Ändert sich der Aufbau, wandert die Konstruktion mit (z. B. Schirm bei neuem L).
+    this.zeigeAuswahl(this.auswahl);
+  }
+
+  /**
+   * Klick als Strahl: trifft er das Wellenfeld (Ebene y = 0) oder den Schirm? Gerechnet gegen
+   * die mathematischen Ebenen statt gegen das Gitter — das hat 150 000 Punkte und wäre pro
+   * Klick unnötig langsam. Die Wellenhöhe (±0,22) spielt beim Zielen keine Rolle.
+   */
+  trefferpunkt(strahl: THREE.Ray): Punkt | null {
+    if (!this.bild) return null;
+    const L = this.bild.schirmabstand;
+    const kandidaten: { punkt: Punkt; abstand: number }[] = [];
+    const treffer = new THREE.Vector3();
+
+    if (this.feld.visible && strahl.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), treffer)) {
+      if (treffer.x > 0.05 && treffer.x <= L && Math.abs(treffer.z) <= BREITE / 2) {
+        kandidaten.push({
+          punkt: { x: treffer.x, z: treffer.z, aufSchirm: false },
+          abstand: strahl.origin.distanceTo(treffer),
+        });
+      }
+    }
+    const schirmEbene = new THREE.Plane(new THREE.Vector3(-1, 0, 0), L + 0.05);
+    if (this.schirm.visible && strahl.intersectPlane(schirmEbene, treffer)) {
+      const y = treffer.y - this.schirm.position.y;
+      if (Math.abs(treffer.z) <= BREITE / 2 && Math.abs(y) <= 1.5) {
+        kandidaten.push({
+          punkt: { x: L, z: treffer.z, aufSchirm: true },
+          abstand: strahl.origin.distanceTo(treffer),
+        });
+      }
+    }
+    kandidaten.sort((a, b) => a.abstand - b.abstand);
+    return kandidaten[0]?.punkt ?? null;
+  }
+
+  zeigeAuswahl(punkt: Punkt | null): void {
+    this.auswahl = punkt;
+    if (!punkt || !this.bild) {
+      this.konstruktion.zeige(false);
+      return;
+    }
+    const L = this.bild.schirmabstand;
+    const x = punkt.aufSchirm ? L : Math.min(punkt.x, L);
+    this.konstruktion.zeichne(konstruiere(this.bild, { x, y: punkt.z }));
+    this.konstruktion.zeige(true);
   }
 
   /** Pro Bild aufrufen: nur die Phase läuft, die Physik bleibt dieselbe. */

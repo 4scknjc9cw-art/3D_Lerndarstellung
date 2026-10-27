@@ -186,6 +186,13 @@ Zugangsdaten, keine Schlüssel, nichts Geheimes im Repo.
 | 3 | Elektronen: Beschleunigungsspannung → de-Broglie-Wellenlänge, Jönsson-Versuch | Materiewellen |
 | später | weitere Experimente als neue Module | — |
 
+**Regel für jeden Tour-Schritt (Kurt, 27.10.2026):** nicht nur sagen, *was* man sieht,
+sondern *warum*, und dem Weg des Lichts folgen („nachdem das Licht durch die Spalte kommt,
+fächert es auf, weil …"). Formeln erst, wenn das Bild sie vorher hergeleitet hat — ohne
+Herleitung waren sie für Kurt unverständlich (Rückmeldung zu Schritt 3).
+Stand 27.10.2026: Schritte 1 (Welle trifft Blende), 2 (Beugung/Huygens, zwei Kreiswellen im
+Gleichtakt) und 5 (Gangunterschied, hier als Tour-Schritt 3) sind ausgeschrieben.
+
 **Tour Phase 1 (Vorschlag, Inhalt wird mit Kurt durchgesehen):**
 1. Was eine Welle ist: Wellenlänge, Berg und Tal — ebene Welle läuft auf die Wand zu.
 2. Ein enger Spalt: aus der ebenen wird eine Kreiswelle (Huygens).
@@ -333,7 +340,7 @@ Schritte, die auf den Schirm blicken, entweder L festsetzen (Startwert) oder die
 später aus dem Aufbau berechnen lassen. Für Schritt 1 („Was ist eine Welle") braucht es
 vermutlich einen Szenenteil ohne Spalte (Wand ganz zu) oder ganz ohne Blende.
 
-### Schritt 5 — Draufsicht und Wege anklicken
+### Schritt 5 — Draufsicht und Wege anklicken ✅ erledigt (27.10.2026)
 Umschalter 3D ↔ Draufsicht, nur in den Schritten, die ihn freigeben (voraussichtlich 5–7);
 Klick auf den Schirm zeichnet beide Wege und zeigt den
 Gangunterschied in λ.
@@ -345,7 +352,36 @@ zum Schirmpunkt, das Lot vom einen Spalt auf den Weg des anderen, und das kurze 
 Δs = d · sin θ farbig hervorgehoben, mit Winkel θ an der Blende. Kurts Rückmeldung zu Schritt 3:
 die Formeln sind ohne diese Herleitung schwer zu verstehen — das Dreieck ist die Brücke
 zwischen Bild und `d · sin θ = m · λ`. Im Bild sind die Winkel vergrößert; das Dreieck wird im
-Bildmaßstab gezeichnet, die Zahlen daneben kommen aus dem echten Aufbau.
+Bildmaßstab gezeichnet, die Zahlen daneben kommen aus dem echten Aufbau. → umgesetzt, siehe unten.
+
+**Ergebnis:** 84 Tests grün. Bildschirmfotos in 3D und Draufsicht: Klick auf den 2. hellen
+Streifen zeigt Δs = 1,99 λ = 995 nm, θ = 0,570°, 9,95 mm auf dem echten Schirm (nachgerechnet:
+sin θ = 0,00995 ✓). Klick-Bedienung mit echter Maus: **ungeprüft**.
+
+**Festlegungen:**
+- Dreieck exakt statt mit Lot: Vom Zielpunkt P wird die Länge des kurzen Wegs auf dem langen
+  abgetragen (Punkt Q, grau gestrichelt), der Rest bis zum fernen Spalt ist Δs (orange). Das
+  ist auch nahe am Spalt exakt, wo die Wege nicht parallel sind; weit weg wird es das
+  Schulbuch-Lot (getestet: Lot ⟂ Weg, Δs → d·sin θ). Dazu Symmetrieachse, Winkelbogen θ,
+  Beschriftungen Δs, θ, d, P.
+- **Brücke Bild ↔ echt ist q = Δs/λ**: allein q entscheidet hell/dunkel, und auch die
+  Einzelspalt-Hülle hängt nur von q und d/b ab. Der Bildpunkt mit q entspricht in echt dem
+  Winkel mit d·sin θ = q·λ. Darum stimmt die Erklärung trotz nicht maßstabsgetreuem Bild.
+- Hell bei |q − m| ≤ 0,1, dunkel bei |q − m − ½| ≤ 0,1, sonst „dazwischen". „genau" steht nur,
+  wenn auch die angezeigte Zahl (2 Stellen) passt. Fehlende Ordnung wird erkannt (Hülle < 0,05).
+- Klick wird gegen die mathematischen Ebenen (Feld y = 0, Schirm x = L) gerechnet, nicht gegen
+  das Gitter (150 000 Punkte). Nur echter Klick zählt (≤ 5 px Bewegung).
+- Konstruktion ohne Tiefenprüfung gezeichnet — sie liegt genau in der Spaltebene, sonst
+  verdeckt sie die Blende. Erklärung zum Punkt steht oben im Seitenfeld (sonst unter dem Rand).
+- Umschalter 3D/Draufsicht nur bei `draufsicht: true` und im freien Modus. Draufsicht wird aus
+  dem aktuellen L berechnet; Bildschirm-oben ist dort −z (gespiegelt ist egal, rechts bleibt
+  die Ausbreitungsrichtung).
+- Prüfhilfen: `?draufsicht`, `?klick=x,z` (x = 99 = auf dem Schirm).
+
+**Fund beim Bauen:** Die fehlende 5. Ordnung (d = 5b) liegt im Bild unter ~39° und damit
+**neben** dem Bild-Schirm (|z| ≤ 8) — auf dem Schirm sieht man sie beim Standard nicht, im
+Wellenfeld kann man sie anklicken. Für Tour-Schritt 9 („Spaltbreite") darum eine Einstellung
+wählen, bei der die fehlende Ordnung auf dem Schirm liegt (z. B. d = 3b oder 4b).
 
 ### Schritt 6 — Tour-Inhalt Phase 1
 Alle neun Schritte mit Ansichten und Texten. Kurt liest jeden Text gegen sein Schulwissen.
@@ -362,7 +398,7 @@ Alle Regler frei, Experiment-Auswahl auf der Startseite.
 3. [ ] Bildrate am Laptop ≥ 50 Bilder/s (PC: 144 Bilder/s = Bildschirmgrenze, Kurt 27.10.2026)
 4. [x] Bild, Formel und Text ändern sich gleichzeitig mit dem Regler (Schritt 3; Gefühl beim Ziehen noch von Kurt zu prüfen)
 5. [ ] Zeitlupe und Pause beeinflussen nur die Animation, nicht das Ergebnis
-6. [ ] Gangunterschied beim Anklicken stimmt mit der Physik überein
+6. [x] Gangunterschied beim Anklicken stimmt mit der Physik überein (Schritt 5, getestet an Maxima, Minimum, fehlender Ordnung)
 7. [ ] Tour von Kurt durchgesehen und abgenommen
 
 ## Ausdrücklich nicht in diesem Plan

@@ -19,8 +19,13 @@ dort nachtragen. Der Plan ist ein lebendes Dokument.
 - 27.10.2026: Schritt 3 Regler + gekoppelter Text ✅, von Kurt abgenommen.
 - 27.10.2026: Schritt 4 Tour-Maschine ✅ (2 Probe-Schritte), 77 Tests grün. Freier Modus ist
   als Umschalter schon mit drin.
-- Nächster Schritt: **Schritt 5 — Draufsicht, Wege anklicken, Gangunterschied-Dreieck**
-  (Kurts Wunsch, siehe Plan). Auf Zuruf, nicht von selbst anfangen.
+- 27.10.2026: Tour-Schritte 1–2 mit „warum" neu geschrieben, Schritt 5 (Draufsicht,
+  Klick, Gangunterschied-Dreieck) ✅ als Tour-Schritt 3. 84 Tests grün.
+- Nächster Schritt: **Schritt 6 — restliche Tour-Schritte** (Plan: „Tour Phase 1", Regel
+  „warum + Weg des Lichts"). Auf Zuruf, nicht von selbst anfangen.
+
+Kurts Regel für Tour-Texte: jeder Schritt erklärt **warum**, folgt dem Weg des Lichts, Formeln
+erst nach der Herleitung im Bild.
 
 Nicht neu diskutieren: kein Vorhersage-Modus, kein KI-Fragefeld, nur PC/Laptop, kein Server,
 echte Physik statt Animation, GitHub Pages mit öffentlichem Repo, 2D-Draufsicht nur in

@@ -11,6 +11,7 @@ export interface Einheit {
   zeichen: string; // z. B. "nm"
   faktor: number; // SI-Wert = Anzeigewert · faktor
   stellen: number; // Nachkommastellen in der Anzeige
+  tex?: string; // eigene TeX-Schreibweise, z. B. "\\,\\lambda" für „1,5 λ"
 }
 
 export interface ParameterDef {
@@ -32,6 +33,14 @@ export interface Groesse {
   einheit: Einheit;
 }
 
+/** Ein angeklickter Punkt in Szenen-Koordinaten (Darstellungsmaßstab). */
+export interface Punkt {
+  x: number;
+  z: number;
+  /** Auf dem Schirm angeklickt: bleibt auf dem Schirm, auch wenn der sich verschiebt. */
+  aufSchirm: boolean;
+}
+
 export interface ExperimentSzene {
   readonly gruppe: THREE.Object3D;
   setze(werte: Werte): void;
@@ -40,6 +49,17 @@ export interface ExperimentSzene {
   readonly teile: readonly string[];
   /** null = alles zeigen. Unbekannte Namen sind ein Fehler. */
   zeige(teile: readonly string[] | null): void;
+  /** Wo trifft ein Mausklick (als Strahl) etwas Anklickbares? */
+  trefferpunkt(strahl: THREE.Ray): Punkt | null;
+  /** Zeichnet die Konstruktion zum Punkt ein (null = entfernen). */
+  zeigeAuswahl(punkt: Punkt | null): void;
+}
+
+/** Was das Erklärfeld zu einem angeklickten Punkt anzeigt. */
+export interface AuswahlInhalt {
+  formeln: string[];
+  text: string;
+  groessen: Record<string, Groesse>;
 }
 
 export interface Experiment {
@@ -52,6 +72,10 @@ export interface Experiment {
   erklaerung: { formeln: string[]; text: string };
   /** Startansicht im freien Modus. */
   ansicht: Ansicht;
+  /** Blick senkrecht von oben, passend zum aktuellen Aufbau. */
+  draufsicht(werte: Werte): Ansicht;
+  /** Erklärung zu einem angeklickten Punkt. */
+  auswahl(werte: Werte, punkt: Punkt): AuswahlInhalt;
   /** Eine Tour je Phase (Welle, Quanten, Elektronen), in Lernreihenfolge. */
   touren: Tour[];
 }
