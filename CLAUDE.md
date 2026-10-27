@@ -14,10 +14,10 @@ dort nachtragen. Der Plan ist ein lebendes Dokument.
   PC von Kurt abgenommen (27.10.2026), Laptop steht aus.
 - 27.10.2026: Schritt 1 Physik-Kern ✅ — 9 Tests grün, ≤ 0,015 % gegen cos²·sinc²
   ([Messung](docs/schritt1-messung.md)).
-- 27.10.2026: Schritt 2 Szene + Wellenfeld gebaut, 16 Tests grün. **Bildrate ungemessen**
-  (Kurt: Adresse mit `?fps` auf PC und Laptop öffnen).
-- Nächster Schritt: **Schritt 3 — Parameter, Regler, gekoppelter Text**. Auf Zuruf, nicht
-  von selbst anfangen.
+- 27.10.2026: Schritt 2 Szene + Wellenfeld ✅, von Kurt abgenommen. PC 144 Bilder/s,
+  Laptop ungemessen (`?fps`).
+- 27.10.2026: Schritt 3 Regler + gekoppelter Text ✅, 73 Tests grün.
+- Nächster Schritt: **Schritt 4 — Tour-Maschine**. Auf Zuruf, nicht von selbst anfangen.
 
 Nicht neu diskutieren: kein Vorhersage-Modus, kein KI-Fragefeld, nur PC/Laptop, kein Server,
 echte Physik statt Animation, GitHub Pages mit öffentlichem Repo, 2D-Draufsicht nur in
@@ -64,4 +64,7 @@ Flüssigkeit der Animation und Kamerafahrten, Lesbarkeit der Texte — braucht K
   `physik.ts` — wer die eine ändert, muss die andere mitziehen.
 - Bildschirmfoto zum Selbstprüfen: `npx vite preview --port 4173`, dann Chrome
   `--headless=new --enable-unsafe-swiftshader --use-angle=swiftshader --screenshot=…`.
-  Bildrate dort ist bedeutungslos (keine Grafikkarte).
+  Bildrate dort ist bedeutungslos (keine Grafikkarte). Prüfhilfen in der Adresse:
+  `?kamera=x,y,z,zielX,zielY,zielZ`, `?werte=d:0.0002,lambda:6.5e-7` (SI), `?fps`.
+- Neue Reglerbereiche immer gegen `index.test.ts` (alle Reglerecken) laufen lassen — dort ist
+  schon einmal ein ineinanderlaufender Spalt aufgefallen.

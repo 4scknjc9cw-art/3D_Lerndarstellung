@@ -272,10 +272,36 @@ Bild-Schirmmuster ist also streng genommen ein Fresnel-Muster. Es stimmt trotzde
 derselben Huygens-Summe kommt wie das Wellenfeld — nur die *Lehrbuch*-Formel cos²·sinc² gilt
 im Bild nicht exakt. Für die Zahlen ist das egal (echter Aufbau: d²/λ = 2 cm ≪ 1 m).
 
-### Schritt 3 — Parameter, Regler, gekoppelter Text
+### Schritt 3 — Parameter, Regler, gekoppelter Text ✅ erledigt (27.10.2026)
 Zentraler Parameterspeicher; Regler; Text-Panel mit KaTeX-Formel und Live-Werten.
 *Tracer:* ein einziger Regler (d) und ein Satz mit `{d}` und `{deltaX}`.
 **Prüfung:** Regler ziehen → Bild, Formel und Satz ändern sich im selben Moment.
+
+**Ergebnis:** 73 Tests grün. Bildschirmfotos bei Standard (Δx = 5,0 mm, θ₁ = 0,29°) und bei
+λ = 650 nm, d = 0,2 mm (Formel 3,3 mm / 0,19°, nachgerechnet 3,25 mm / 0,186°; Bild rot, Streifen
+enger). Gleichzeitigkeit ist durch Bauart gesichert: ein Speicher, alle hängen als Beobachter
+daran. Wie es sich beim Ziehen *anfühlt* (Ruckeln bei λ/L-Änderung, weil dann das Gitter neu
+gebaut wird): **ungeprüft**, braucht Kurts Blick.
+
+**Festlegungen:**
+- Die Naht `kern/experiment.ts` steht: Parameter (SI-Einheiten, Bereich, „warum"-Satz),
+  `groessen()` für Text/Formeln, `erzeugeSzene()`. Der Kern kennt den Doppelspalt nicht.
+- Statt Tracer mit nur d gleich alle vier Regler (λ, d, b, L) — gleicher Aufwand, weil die
+  Reglerliste generisch ist; wird in Schritt 7 zum freien Modus.
+- Platzhalter `[[name]]` statt `{name}`, weil `{}` in TeX schon belegt ist. Unbekannte
+  Platzhalter und Parameter werfen einen Fehler.
+- Nach jeder Änderung leuchtet der geänderte Wert und alle berechneten Größen 0,9 s orange in
+  der Formel auf, darunter erscheint der „warum"-Satz des Reglers.
+- Reglerbereiche: λ 380–750 nm, d 0,06–0,30 mm, b 0,005–0,030 mm, L 0,5–1,5 m.
+  L_Bild = 12 · L (6–18).
+- Huygens-Quellen im Bild jetzt angepasst (≤ λ/4 Abstand, 8–32 je Spalt), im echten Aufbau
+  bleiben 16 (Geisterstrahlen erst bei sin θ ≥ 0,15, weit außerhalb des Schirms).
+- Bildmitte um das halbe Seitenfeld nach links verschoben (`setViewOffset`), sonst verdeckt
+  es den Schirm. Prüfhilfe `?werte=d:0.0002,lambda:6.5e-7`.
+
+**Fund beim Bauen:** Der Test über alle 16 Reglerecken fiel durch: bei d = 0,06 mm und
+b = 0,04 mm bliebe nur 0,02 mm Steg — die Spalte liefen fast ineinander. b ist darum auf
+0,03 mm begrenzt.
 
 ### Schritt 4 — Tour-Maschine
 `tour.ts` spielt Schritte aus Daten ab; Kamerafahrten; freie Regler je Schritt; vor/zurück.
@@ -300,8 +326,8 @@ Alle Regler frei, Experiment-Auswahl auf der Startseite.
 
 1. [ ] Feste Adresse funktioniert auf PC und Laptop ohne Start-Befehl
 2. [x] Physik-Tests grün, Abweichung ≤ 0,015 % gegen cos²·sinc² ([Messung](schritt1-messung.md))
-3. [ ] Bildrate am Laptop ≥ 50 Bilder/s
-4. [ ] Bild, Formel und Text ändern sich gleichzeitig mit dem Regler
+3. [ ] Bildrate am Laptop ≥ 50 Bilder/s (PC: 144 Bilder/s = Bildschirmgrenze, Kurt 27.10.2026)
+4. [x] Bild, Formel und Text ändern sich gleichzeitig mit dem Regler (Schritt 3; Gefühl beim Ziehen noch von Kurt zu prüfen)
 5. [ ] Zeitlupe und Pause beeinflussen nur die Animation, nicht das Ergebnis
 6. [ ] Gangunterschied beim Anklicken stimmt mit der Physik überein
 7. [ ] Tour von Kurt durchgesehen und abgenommen

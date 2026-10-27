@@ -17,23 +17,28 @@ const BEZUG = {
   wellenlaengeBild: 0.35,
   spaltabstandEcht: 0.1e-3,
   spaltabstandBild: 2.8,
-  schirmabstandBild: 12, // bei L = 1 m
+  schirmabstandBild: 12, // je Meter echtem L
 };
 
 export const SCHIRM_MIN = 6;
-export const SCHIRM_MAX = 16;
+export const SCHIRM_MAX = 18;
 
 export function darstellungsAufbau(echt: Aufbau): Aufbau {
   const laengenFaktor = BEZUG.spaltabstandBild / BEZUG.spaltabstandEcht;
+  const wellenlaenge = (echt.wellenlaenge * BEZUG.wellenlaengeBild) / BEZUG.wellenlaengeEcht;
+  // d und b mit demselben Faktor, damit d/b und damit die fehlenden Ordnungen stimmen.
+  const spaltbreite = echt.spaltbreite * laengenFaktor;
   return {
-    wellenlaenge: (echt.wellenlaenge * BEZUG.wellenlaengeBild) / BEZUG.wellenlaengeEcht,
-    // d und b mit demselben Faktor, damit d/b und damit die fehlenden Ordnungen stimmen.
+    wellenlaenge,
     spaltabstand: echt.spaltabstand * laengenFaktor,
-    spaltbreite: echt.spaltbreite * laengenFaktor,
+    spaltbreite,
     schirmabstand: Math.min(
       SCHIRM_MAX,
       Math.max(SCHIRM_MIN, BEZUG.schirmabstandBild * echt.schirmabstand),
     ),
-    quellenJeSpalt: echt.quellenJeSpalt,
+    // Im Bild sieht man das Feld unter ALLEN Winkeln, darum müssen die Huygens-Quellen dicht
+    // liegen (≤ λ/4), sonst entstehen falsche Nebenstrahlen. Mehr als nötig kostet nur
+    // Grafikleistung. (Im echten Aufbau genügen 16, siehe physik.ts.)
+    quellenJeSpalt: Math.min(32, Math.max(8, Math.ceil((4 * spaltbreite) / wellenlaenge))),
   };
 }

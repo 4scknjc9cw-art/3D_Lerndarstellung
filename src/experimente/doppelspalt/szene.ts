@@ -11,63 +11,74 @@ const BREITE = 16; // Ausdehnung quer zur Ausbreitung (z von −8 bis +8)
 const VORLAUF = 5; // Strecke der ebenen Welle vor der Blende
 const PERIODE_SEK = 1.6; // eine Schwingung pro 1,6 s bei normalem Tempo
 const SCHIRM_PUNKTE = 1024;
+// Gitterabstand ~ λ/8 im Bild, aber nie feiner als 0,04 — sonst wird es am Laptop zu viel.
+const GITTER_MIN = 0.04;
 
 export class DoppelspaltSzene {
   readonly gruppe = new THREE.Group();
   private feldMaterial = wellenMaterial(false);
   private einfallMaterial = wellenMaterial(true);
-  private feld?: THREE.Mesh;
+  private feld = new THREE.Mesh(new THREE.BufferGeometry(), this.feldMaterial);
+  private feldSchluessel = '';
   private blende = new THREE.Group();
-  private schirm?: THREE.Mesh;
+  private blendenMaterial = new THREE.MeshStandardMaterial({ color: 0x8a919c, roughness: 0.6 });
   private schirmTextur = new THREE.DataTexture(
     new Uint8Array(SCHIRM_PUNKTE * 4),
     SCHIRM_PUNKTE,
     1,
   );
+  private schirm: THREE.Mesh;
 
   constructor() {
     this.schirmTextur.colorSpace = THREE.SRGBColorSpace;
     this.schirmTextur.magFilter = THREE.LinearFilter;
 
-    const einfall = new THREE.Mesh(this.gitter(VORLAUF, 0.04), this.einfallMaterial);
+    const einfall = new THREE.Mesh(this.gitter(VORLAUF, GITTER_MIN), this.einfallMaterial);
     einfall.position.x = -VORLAUF;
-    this.gruppe.add(einfall);
+    this.gruppe.add(einfall, this.feld, this.blende);
 
     const laser = new THREE.Mesh(
       new THREE.BoxGeometry(1.2, 0.8, 1.6),
       new THREE.MeshStandardMaterial({ color: 0x30343c, metalness: 0.4, roughness: 0.5 }),
     );
     laser.position.set(-VORLAUF - 0.8, 0.2, 0);
-    this.gruppe.add(laser);
     // Orange Kennstreifen = Gerät/Bedienteil (Akzentfarbe), nicht Licht.
     const streifen = new THREE.Mesh(
       new THREE.BoxGeometry(1.22, 0.08, 1.62),
       new THREE.MeshStandardMaterial({ color: 0xff8c2e, roughness: 0.4 }),
     );
     streifen.position.set(-VORLAUF - 0.8, 0.45, 0);
-    this.gruppe.add(streifen);
-    this.gruppe.add(this.blende);
+    this.gruppe.add(laser, streifen);
+
+    const schirmGeo = new THREE.PlaneGeometry(BREITE, 3);
+    // Ebene zeigt danach in −x (zur Blende hin); u läuft dabei in +z.
+    schirmGeo.rotateY(-Math.PI / 2);
+    this.schirm = new THREE.Mesh(schirmGeo, new THREE.MeshBasicMaterial({ map: this.schirmTextur }));
+    this.gruppe.add(this.schirm);
   }
 
-  /** Neuer Aufbau (echte Werte): Bild, Blende und Schirm werden daraus neu erzeugt. */
+  /**
+   * Neuer Aufbau (echte Werte). Wird beim Ziehen eines Reglers pro Bild aufgerufen, darum
+   * wird nur neu gebaut, was sich geändert hat — das Gitter (teuer) nur bei neuem L oder λ.
+   */
   setze(echt: Aufbau): void {
     const bild = darstellungsAufbau(echt);
-    const [r, g, b] = wellenlaengeZuFarbe(echt.wellenlaenge);
+    const farbe = wellenlaengeZuFarbe(echt.wellenlaenge);
     for (const m of [this.feldMaterial, this.einfallMaterial]) {
       setzeAufbau(m, bild);
-      (m.uniforms.uFarbe.value as THREE.Color).setRGB(r, g, b);
+      (m.uniforms.uFarbe.value as THREE.Color).setRGB(...farbe);
     }
 
-    // Gitterabstand ~ λ/10 im Bild, damit die Welle glatt aussieht, aber nicht feiner als nötig.
-    if (this.feld) this.gruppe.remove(this.feld);
-    this.feld = new THREE.Mesh(
-      this.gitter(bild.schirmabstand, bild.wellenlaenge / 10),
-      this.feldMaterial,
-    );
-    this.gruppe.add(this.feld);
+    const abstand = Math.max(GITTER_MIN, bild.wellenlaenge / 8);
+    const schluessel = `${bild.schirmabstand}|${abstand}`;
+    if (schluessel !== this.feldSchluessel) {
+      this.feld.geometry.dispose();
+      this.feld.geometry = this.gitter(bild.schirmabstand, abstand);
+      this.feldSchluessel = schluessel;
+    }
 
     this.baueBlende(bild);
-    this.baueSchirm(bild, [r, g, b]);
+    this.zeichneSchirm(bild, farbe);
   }
 
   /** Pro Bild aufrufen: nur die Phase läuft, die Physik bleibt dieselbe. */
@@ -91,8 +102,8 @@ export class DoppelspaltSzene {
   }
 
   private baueBlende(bild: Aufbau): void {
+    for (const steg of this.blende.children) (steg as THREE.Mesh).geometry.dispose();
     this.blende.clear();
-    const material = new THREE.MeshStandardMaterial({ color: 0x8a919c, roughness: 0.6 });
     const dicke = 0.15;
     const hoehe = 1.4;
     const halbD = bild.spaltabstand / 2;
@@ -104,13 +115,16 @@ export class DoppelspaltSzene {
       [halbD + halbB, BREITE / 2],
     ];
     for (const [von, bis] of stege) {
-      const steg = new THREE.Mesh(new THREE.BoxGeometry(dicke, hoehe, bis - von), material);
+      const steg = new THREE.Mesh(
+        new THREE.BoxGeometry(dicke, hoehe, bis - von),
+        this.blendenMaterial,
+      );
       steg.position.set(0, 0.3, (von + bis) / 2);
       this.blende.add(steg);
     }
   }
 
-  private baueSchirm(bild: Aufbau, farbe: [number, number, number]): void {
+  private zeichneSchirm(bild: Aufbau, farbe: [number, number, number]): void {
     // Schirmbild aus physik.ts (64-Bit, dieselbe Rechnung wie die Tests), im Bildmaßstab —
     // damit die hellen Streifen genau dort liegen, wo im Wellenfeld die Berge ankommen.
     const daten = this.schirmTextur.image.data as Uint8Array;
@@ -123,13 +137,6 @@ export class DoppelspaltSzene {
       daten[i * 4 + 3] = 255;
     }
     this.schirmTextur.needsUpdate = true;
-
-    if (this.schirm) this.gruppe.remove(this.schirm);
-    const geo = new THREE.PlaneGeometry(BREITE, 3);
-    // Ebene zeigt danach in −x (zur Blende hin); u läuft dabei in +z.
-    geo.rotateY(-Math.PI / 2);
-    this.schirm = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: this.schirmTextur }));
     this.schirm.position.set(bild.schirmabstand + 0.05, 1.2, 0);
-    this.gruppe.add(this.schirm);
   }
 }

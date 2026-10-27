@@ -35,8 +35,30 @@
         border-left: 3px solid var(--akzent); padding: 10px 14px; border-radius: 10px;
       }
       .hinweis b { color: var(--akzent); }
+      .seitenfeld {
+        position: fixed; top: 16px; right: 16px; bottom: 16px; width: 390px;
+        overflow-y: auto; background: var(--flaeche); border: 1px solid var(--rand);
+        border-radius: 12px; padding: 16px 20px; box-sizing: border-box;
+      }
+      .seitenfeld h1 { font-size: 20px; margin: 0 0 8px; }
+      .seitenfeld h2 {
+        font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em;
+        color: var(--akzent); margin: 20px 0 10px;
+      }
+      .erklaerung p { font-size: 14.5px; line-height: 1.55; margin: 10px 0; }
+      .erklaerung .formel { font-size: 15px; overflow-x: auto; }
+      .erklaerung .warum {
+        display: none; border-left: 3px solid var(--akzent); padding-left: 10px;
+        color: #d9d4cc;
+      }
+      .erklaerung .warum.sichtbar { display: block; }
+      .regler { display: block; margin-bottom: 14px; }
+      .regler-kopf { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+      .regler-wert { font-variant-numeric: tabular-nums; color: var(--akzent); }
+      .regler input[type='range'] { width: 100%; accent-color: var(--akzent); }
+      .zeitleiste { left: calc(50% - 205px); }
       .fps {
-        position: fixed; top: 16px; right: 16px; font: 14px monospace;
+        position: fixed; top: 16px; right: 424px; font: 14px monospace;
         background: rgba(0, 0, 0, 0.6); padding: 4px 8px; border-radius: 6px;
       }
     </style>

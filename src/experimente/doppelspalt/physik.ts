@@ -22,6 +22,9 @@ export const standardAufbau: Aufbau = {
   spaltabstand: 0.1e-3,
   spaltbreite: 0.02e-3,
   schirmabstand: 1,
+  // Quellabstand b/16 ist hier größer als λ. Das erzeugt Geister-Nebenstrahlen erst bei
+  // sin θ = 16λ/b ≥ 0,15 — weit außerhalb des Schirmbereichs (Winkel ≤ 0,03). Das Bild
+  // (darstellung.ts) braucht dichtere Quellen, weil man dort alle Winkel sieht.
   quellenJeSpalt: 16,
 };
 
