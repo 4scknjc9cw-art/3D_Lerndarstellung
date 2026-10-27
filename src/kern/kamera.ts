@@ -50,6 +50,13 @@ export class Kamerafahrt {
     this.start = performance.now();
   }
 
+  /** Laufende Fahrt sofort beenden und am Ziel stehen (für Bildschirmfotos). */
+  sofortAmZiel(): void {
+    if (!this.nach) return;
+    this.setze(this.nach.ziel, this.nach.kugel);
+    this.nach = undefined;
+  }
+
   /** In jedem Bild aufrufen. */
   aktualisiere(): void {
     if (!this.nach || !this.von) return;

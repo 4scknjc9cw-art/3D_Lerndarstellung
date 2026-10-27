@@ -81,6 +81,20 @@ export const doppelspalt: Experiment = {
         'Größerer Schirmabstand → die Winkel bleiben gleich, aber die Strahlen laufen länger ' +
         'auseinander → die Streifen auf dem Schirm liegen weiter auseinander.',
     },
+    {
+      schluessel: 'spalte',
+      name: 'Offene Spalte',
+      symbol: 'n',
+      einheit: ZAHL,
+      min: 1,
+      max: 2,
+      schritt: 1,
+      start: 2,
+      warum:
+        'Mit einem Spalt gibt es nur eine Kreiswelle, sie kann sich mit keiner anderen ' +
+        'überlagern → keine feinen Streifen, nur ein breiter heller Fleck (die Einzelspalt-Hülle). ' +
+        'Erst der zweite Spalt bringt die Interferenz und damit die Streifen.',
+    },
   ],
 
   erzeugeSzene() {
@@ -91,6 +105,8 @@ export const doppelspalt: Experiment = {
       animiere: (t) => szene.animiere(t),
       teile: [...szene.teile.keys()],
       zeige: (teile) => szene.zeige(teile),
+      hilfen: szene.hilfen,
+      zeigeHilfen: (namen) => szene.zeigeHilfen(namen),
       trefferpunkt: (strahl) => szene.trefferpunkt(strahl),
       zeigeAuswahl: (punkt) => szene.zeigeAuswahl(punkt),
     };

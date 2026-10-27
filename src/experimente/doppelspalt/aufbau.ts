@@ -11,5 +11,6 @@ export function aufbauAus(werte: Werte): Aufbau {
     spaltbreite: werte.b,
     schirmabstand: werte.L,
     quellenJeSpalt: standardAufbau.quellenJeSpalt,
+    spalte: werte.spalte === 1 ? 1 : 2,
   };
 }

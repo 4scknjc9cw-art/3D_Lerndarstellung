@@ -76,14 +76,18 @@ hinweis.innerHTML =
   'sind dadurch viel größer als in echt. Alle Zahlen rechts sind echte Werte.';
 document.body.appendChild(hinweis);
 
-const feld = seitenfeld(experiment, parameter, experimentSzene, fahrt, auswahl);
+const feld = seitenfeld(experiment, parameter, experimentSzene, fahrt, auswahl, zeit);
 document.body.appendChild(feld.element);
 
 // Prüfhilfen für Bildschirmfotos (in der Adresse):
-//   ?frei  ?schritt=2 (ab 1)  ?werte=d:0.0002,lambda:6.5e-7 (SI)  ?kamera=x,y,z,zx,zy,zz  ?fps
-//   ?draufsicht  ?klick=x,z (Szenen-Koordinaten; x = 99 heißt: auf dem Schirm)
+//   ?frei  ?schritt=2&teil=3 (ab 1)  ?werte=d:0.0002,lambda:6.5e-7 (SI)  ?fps
+//   ?kamera=x,y,z,zx,zy,zz  ?draufsicht  ?klick=x,z (Szenen-Koordinaten; x = 99 heißt Schirm)
 const adresse = new URLSearchParams(location.search);
-feld.starte(adresse.has('frei') ? 'frei' : 'tour', Number(adresse.get('schritt') ?? 1) - 1);
+feld.starte(
+  adresse.has('frei') ? 'frei' : 'tour',
+  Number(adresse.get('schritt') ?? 1) - 1,
+  Number(adresse.get('teil') ?? 1) - 1,
+);
 for (const paar of adresse.get('werte')?.split(',') ?? []) {
   const [name, wert] = paar.split(':');
   parameter.setze(name, Number(wert));
@@ -93,20 +97,14 @@ if (klickParam) {
   const [x, z] = klickParam.split(',').map(Number);
   auswahl.setze({ x, z, aufSchirm: x >= 99 });
 }
+if (adresse.has('draufsicht')) feld.setzeDraufsicht(true);
 const kameraParam = adresse.get('kamera');
 if (kameraParam) {
   const [x, y, z, zx, zy, zz] = kameraParam.split(',').map(Number);
-  fahrt.fahre({ position: [x, y, z], ziel: [zx, zy, zz] }, true);
-} else if (adresse.has('schritt') || adresse.has('frei')) {
-  // Ohne Fahrt direkt in die Ansicht — das Bildschirmfoto soll nicht mitten in der Fahrt entstehen.
-  fahrt.fahre(
-    adresse.has('frei')
-      ? experiment.ansicht
-      : experiment.touren[0].schritte[Number(adresse.get('schritt')) - 1].kamera,
-    true,
-  );
+  fahrt.fahre({ position: [x, y, z], ziel: [zx, zy, zz] });
 }
-if (adresse.has('draufsicht')) feld.setzeDraufsicht(true, true);
+// Ohne Fahrt direkt in die Ansicht — das Bildschirmfoto soll nicht mitten in der Fahrt entstehen.
+if (['schritt', 'frei', 'kamera', 'draufsicht'].some((p) => adresse.has(p))) fahrt.sofortAmZiel();
 
 // Das Seitenfeld (390 px + Rand, siehe index.html) liegt über dem Bild. Die Bildmitte wird
 // darum in die Mitte der freien Fläche links davon verschoben, sonst verdeckt es den Schirm.

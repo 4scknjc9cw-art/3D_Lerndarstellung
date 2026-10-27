@@ -40,5 +40,6 @@ export function darstellungsAufbau(echt: Aufbau): Aufbau {
     // liegen (≤ λ/4), sonst entstehen falsche Nebenstrahlen. Mehr als nötig kostet nur
     // Grafikleistung. (Im echten Aufbau genügen 16, siehe physik.ts.)
     quellenJeSpalt: Math.min(32, Math.max(8, Math.ceil((4 * spaltbreite) / wellenlaenge))),
+    spalte: echt.spalte,
   };
 }

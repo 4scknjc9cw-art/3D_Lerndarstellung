@@ -48,7 +48,8 @@ export class Erklaerfeld {
   private warum = document.createElement('p');
   private auswahlKasten = document.createElement('div');
   private auswahlInhalt = document.createElement('div');
-  private inhalt: Inhalt = { text: '' };
+  /** Die Teile des aktuellen Schritts bis hierher; der letzte ist der aktive. */
+  private inhalte: Inhalt[] = [];
   private leuchtend: string | null = null;
   private leuchtTimer = 0;
   private parameterNamen: Set<string>;
@@ -87,9 +88,13 @@ export class Erklaerfeld {
     auswahl.beobachte(() => this.zeichne());
   }
 
-  /** Neuer Inhalt (z. B. neuer Tour-Schritt): der alte „warum"-Satz gehört nicht mehr dazu. */
-  setzeInhalt(inhalt: Inhalt): void {
-    this.inhalt = inhalt;
+  /**
+   * Neuer Inhalt (z. B. neuer Tour-Teil): frühere Teile desselben Schritts bleiben abgeblendet
+   * darüber stehen, damit der Zusammenhang nicht verloren geht. Der alte „warum"-Satz gehört
+   * nicht mehr dazu.
+   */
+  setzeInhalt(...inhalte: Inhalt[]): void {
+    this.inhalte = inhalte;
     this.leuchtend = null;
     this.warum.classList.remove('sichtbar');
     this.zeichne();
@@ -101,7 +106,16 @@ export class Erklaerfeld {
     // Leuchten: der geänderte Parameter und alle berechneten Größen (die hängen von ihm ab).
     const leuchtet = (name: string) =>
       this.leuchtend !== null && (name === this.leuchtend || !this.parameterNamen.has(name));
-    zeichneInhalt(this.haupt, this.inhalt, groessen, leuchtet);
+    this.haupt.replaceChildren(
+      ...this.inhalte.map((inhalt, i) => {
+        const aktiv = i === this.inhalte.length - 1;
+        const teil = Object.assign(document.createElement('div'), {
+          className: aktiv ? 'teil aktiv' : 'teil frueher',
+        });
+        zeichneInhalt(teil, inhalt, groessen, aktiv ? leuchtet : () => false);
+        return teil;
+      }),
+    );
 
     const punkt = this.auswahl.aktuell;
     this.auswahlKasten.hidden = !punkt;

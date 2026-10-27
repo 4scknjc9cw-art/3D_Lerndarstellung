@@ -14,6 +14,8 @@ export interface Aufbau {
   spaltbreite: number; // b
   schirmabstand: number; // L
   quellenJeSpalt: number; // Huygens-Punktquellen pro Spalt
+  /** 1 = nur der obere Spalt offen (Tour: Beugung am Einzelspalt), sonst beide. */
+  spalte?: 1 | 2;
 }
 
 /** Schulbuch-Standardwerte: grünes Licht, typische Laborblende. */
@@ -26,6 +28,7 @@ export const standardAufbau: Aufbau = {
   // sin θ = 16λ/b ≥ 0,15 — weit außerhalb des Schirmbereichs (Winkel ≤ 0,03). Das Bild
   // (darstellung.ts) braucht dichtere Quellen, weil man dort alle Winkel sieht.
   quellenJeSpalt: 16,
+  spalte: 2,
 };
 
 /** Komplexe Zahl als Zeiger: Länge = Amplitude, Winkel = Phase der Welle. */
@@ -35,6 +38,12 @@ export interface Zeiger {
 }
 
 export type Spalt = 'oben' | 'unten';
+
+/** Die offenen Spalte. Beim Einzelspalt bleibt der obere an seinem Platz offen — so sieht
+ * man in der Tour, dass beim nächsten Schritt nur ein zweiter dazukommt. */
+export function offeneSpalte(aufbau: Aufbau): Spalt[] {
+  return aufbau.spalte === 1 ? ['oben'] : ['oben', 'unten'];
+}
 
 export function spaltMitte(aufbau: Aufbau, spalt: Spalt): number {
   return spalt === 'oben' ? aufbau.spaltabstand / 2 : -aufbau.spaltabstand / 2;
@@ -71,11 +80,16 @@ export function feldVonSpalt(aufbau: Aufbau, spalt: Spalt, x: number, y: number)
   return { re, im };
 }
 
-/** Gesamtwelle beider Spalte am Punkt (x, y): Wellen addieren — das ist Interferenz. */
+/** Gesamtwelle aller offenen Spalte am Punkt (x, y): Wellen addieren — das ist Interferenz. */
 export function feld(aufbau: Aufbau, x: number, y: number): Zeiger {
-  const a = feldVonSpalt(aufbau, 'oben', x, y);
-  const b = feldVonSpalt(aufbau, 'unten', x, y);
-  return { re: a.re + b.re, im: a.im + b.im };
+  let re = 0;
+  let im = 0;
+  for (const spalt of offeneSpalte(aufbau)) {
+    const z = feldVonSpalt(aufbau, spalt, x, y);
+    re += z.re;
+    im += z.im;
+  }
+  return { re, im };
 }
 
 /**

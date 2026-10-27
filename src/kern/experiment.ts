@@ -49,6 +49,9 @@ export interface ExperimentSzene {
   readonly teile: readonly string[];
   /** null = alles zeigen. Unbekannte Namen sind ein Fehler. */
   zeige(teile: readonly string[] | null): void;
+  /** Hilfen im Bild, die nur Tour-Teile einblenden (λ-Maß, Ordnungen …). */
+  readonly hilfen: readonly string[];
+  zeigeHilfen(namen: readonly string[]): void;
   /** Wo trifft ein Mausklick (als Strahl) etwas Anklickbares? */
   trefferpunkt(strahl: THREE.Ray): Punkt | null;
   /** Zeichnet die Konstruktion zum Punkt ein (null = entfernen). */

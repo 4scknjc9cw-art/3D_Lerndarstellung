@@ -1,14 +1,14 @@
 // Seitenfeld: oben Umschalter Tour / Frei, darunter Erklärung und Regler, unten Vor/Zurück.
 // Beide Modi teilen sich EIN Erklärfeld und EINE Reglerliste — sie zeigen nur anderes.
-// Der Umschalter 3D / Draufsicht erscheint nur, wo er hilft (Kurt): im Tour-Schritt mit
-// `draufsicht: true` und im freien Modus.
+// Der Umschalter 3D / Draufsicht erscheint nur, wo er hilft (Kurt): in Tour-Teilen mit
+// `umschalter: true` und im freien Modus.
 
 import type { Auswahl } from '../auswahl';
-import type { Ansicht } from '../tour';
 import type { Experiment, ExperimentSzene } from '../experiment';
 import type { Kamerafahrt } from '../kamera';
 import type { Parameter } from '../parameter';
-import { type TourSchritt, TourSpieler } from '../tour';
+import { type Ansicht, type Stelle, type TourSchritt, TourSpieler } from '../tour';
+import type { Zeit } from '../zeit';
 import { Erklaerfeld } from './erklaerung';
 import { ReglerListe } from './regler';
 
@@ -28,9 +28,10 @@ export function seitenfeld(
   szene: ExperimentSzene,
   fahrt: Kamerafahrt,
   auswahl: Auswahl,
+  zeit: Zeit,
 ): {
   element: HTMLElement;
-  starte(modus: Modus, schritt?: number): void;
+  starte(modus: Modus, schritt?: number, teil?: number): void;
   setzeDraufsicht(an: boolean, sofort?: boolean): void;
 } {
   const feld = document.createElement('aside');
@@ -41,8 +42,13 @@ export function seitenfeld(
   const startwerte = Object.fromEntries(experiment.parameter.map((p) => [p.schluessel, p.start]));
   const spieler = tour ? new TourSpieler(tour, parameter, startwerte) : undefined;
   for (const s of tour?.schritte ?? []) {
-    for (const teil of s.sichtbar ?? []) {
-      if (!szene.teile.includes(teil)) throw new Error(`Schritt „${s.titel}": unbekannter Teil ${teil}`);
+    for (const t of s.teile) {
+      for (const teil of t.sichtbar ?? []) {
+        if (!szene.teile.includes(teil)) throw new Error(`„${s.titel}": unbekannter Teil ${teil}`);
+      }
+      for (const h of t.hilfen ?? []) {
+        if (!szene.hilfen.includes(h)) throw new Error(`„${s.titel}": unbekannte Hilfe ${h}`);
+      }
     }
   }
 
@@ -57,7 +63,9 @@ export function seitenfeld(
   const titel = document.createElement('h1');
   const fortschritt = document.createElement('div');
   fortschritt.className = 'fortschritt';
-  kopf.append(fortschritt, titel);
+  const punkte = document.createElement('div');
+  punkte.className = 'teil-punkte';
+  kopf.append(fortschritt, titel, punkte);
 
   const ansichtLeiste = document.createElement('div');
   ansichtLeiste.className = 'ansicht-leiste';
@@ -82,7 +90,7 @@ export function seitenfeld(
   feld.append(modusLeiste, inhalt, navigation);
 
   let modus: Modus = 'tour';
-  /** Die 3D-Ansicht, zu der „3D-Ansicht" zurückkehrt: die des Schritts bzw. des freien Modus. */
+  /** Die 3D-Ansicht, zu der „3D-Ansicht" zurückkehrt. */
   let ansicht3d: Ansicht = experiment.ansicht;
 
   function setzeDraufsicht(an: boolean, sofort = false): void {
@@ -91,26 +99,46 @@ export function seitenfeld(
     fahrt.fahre(an ? experiment.draufsicht(parameter.alle) : ansicht3d, sofort);
   }
 
-  /** Neuer Schritt oder Modus: Klick-Auswahl weg, zurück in 3D, Umschalter nur wo erlaubt. */
-  function neueAnsicht(ansicht: Ansicht, umschalterErlaubt: boolean): void {
-    ansicht3d = ansicht;
-    auswahl.setze(null);
-    ansichtLeiste.hidden = !umschalterErlaubt;
-    setzeDraufsicht(false);
-  }
-
-  const zeigeSchritt = (schritt: TourSchritt, index: number) => {
+  const zeigeStelle = (schritt: TourSchritt, stelle: Stelle) => {
+    const teil = schritt.teile[stelle.teil];
     titel.textContent = schritt.titel;
-    fortschritt.textContent = `${tour!.titel} · Schritt ${index + 1} von ${spieler!.anzahl}`;
-    erklaerung.setzeInhalt(schritt);
+    fortschritt.textContent = `${tour!.titel} · Schritt ${stelle.schritt + 1} von ${spieler!.anzahl}`;
+    punkte.replaceChildren(
+      ...schritt.teile.map((_, i) =>
+        Object.assign(document.createElement('span'), {
+          className: i < stelle.teil ? 'erledigt' : i === stelle.teil ? 'aktiv' : '',
+        }),
+      ),
+    );
+    punkte.hidden = schritt.teile.length < 2;
+
+    erklaerung.setzeInhalt(...schritt.teile.slice(0, stelle.teil + 1));
     reglerTitel.hidden = !regler.zeigeNur(schritt.freieRegler ?? []);
-    szene.zeige(schritt.sichtbar ?? null);
-    neueAnsicht(schritt.kamera, schritt.draufsicht === true);
-    zurueck.disabled = index === 0;
-    weiter.disabled = index === spieler!.anzahl - 1;
-    inhalt.scrollTop = 0;
+    szene.zeige(teil.sichtbar ?? null);
+    szene.zeigeHilfen(teil.hilfen ?? []);
+    auswahl.setze(teil.auswahl ?? null);
+    zeit.setze(teil.tempo ?? 'normal');
+
+    // 3D-Ansicht dieses Teils: seine eigene, sonst die letzte 3D-Ansicht davor im Schritt.
+    const frueher3d = schritt.teile
+      .slice(0, stelle.teil + 1)
+      .map((t) => t.kamera)
+      .filter((k): k is Ansicht => k !== 'draufsicht');
+    ansicht3d = frueher3d.at(-1) ?? experiment.ansicht;
+    ansichtLeiste.hidden = !teil.umschalter;
+    setzeDraufsicht(teil.kamera === 'draufsicht');
+
+    zurueck.disabled = spieler!.amAnfang;
+    weiter.disabled = spieler!.amEnde;
+    // Der aktive Teil steht unten — dorthin scrollen, frühere bleiben darüber lesbar.
+    if (stelle.teil === 0) inhalt.scrollTop = 0;
+    else {
+      requestAnimationFrame(() =>
+        inhalt.querySelector('.teil.aktiv')?.scrollIntoView({ block: 'start', behavior: 'smooth' }),
+      );
+    }
   };
-  spieler?.beobachte(zeigeSchritt);
+  spieler?.beobachte(zeigeStelle);
 
   function setzeModus(neu: Modus): void {
     modus = neu === 'tour' && spieler ? 'tour' : 'frei';
@@ -119,15 +147,21 @@ export function seitenfeld(
     tourKnopf.disabled = !spieler;
     navigation.hidden = modus !== 'tour';
     if (modus === 'tour') {
-      spieler!.gehe(spieler!.aktuell);
+      const { schritt, teil } = spieler!.aktuell;
+      spieler!.gehe(schritt, teil);
     } else {
       // Im freien Modus bleiben die Werte aus der Tour stehen — man macht dort weiter.
       fortschritt.textContent = 'Frei ausprobieren';
       titel.textContent = experiment.titel;
+      punkte.hidden = true;
       erklaerung.setzeInhalt(experiment.erklaerung);
       reglerTitel.hidden = !regler.zeigeNur(null);
       szene.zeige(null);
-      neueAnsicht(experiment.ansicht, true);
+      szene.zeigeHilfen([]);
+      auswahl.setze(null);
+      ansicht3d = experiment.ansicht;
+      ansichtLeiste.hidden = false;
+      setzeDraufsicht(false);
     }
   }
 
@@ -140,9 +174,9 @@ export function seitenfeld(
 
   return {
     element: feld,
-    /** Startet im gewünschten Modus; schritt zählt ab 0. */
-    starte(start: Modus, schritt = 0) {
-      if (start === 'tour' && spieler) spieler.gehe(schritt);
+    /** Startet im gewünschten Modus; schritt und teil zählen ab 0. */
+    starte(start: Modus, schritt = 0, teil = 0) {
+      if (start === 'tour' && spieler) spieler.gehe(schritt, teil);
       setzeModus(start);
     },
     setzeDraufsicht,

@@ -383,9 +383,36 @@ sin θ = 0,00995 ✓). Klick-Bedienung mit echter Maus: **ungeprüft**.
 Wellenfeld kann man sie anklicken. Für Tour-Schritt 9 („Spaltbreite") darum eine Einstellung
 wählen, bei der die fehlende Ordnung auf dem Schirm liegt (z. B. d = 3b oder 4b).
 
-### Schritt 6 — Tour-Inhalt Phase 1
+### Schritt 6 — Tour-Inhalt Phase 1 ✅ gebaut (27.10.2026), Abnahme durch Kurt steht aus
 Alle neun Schritte mit Ansichten und Texten. Kurt liest jeden Text gegen sein Schulwissen.
 **Prüfung:** Kurt geht die Tour einmal komplett durch und nimmt ab.
+
+**Ergebnis:** 9 Schritte mit 27 Teilen, 136 Tests grün. Bildschirmfotos von 10 Teilen
+angesehen; zwei Kameras danach korrigiert (Dreieck-Nahsicht zu eng, fehlender Streifen unter
+dem Seitenfeld). Jede Behauptung eines Texts über einen vorgewählten Punkt („hier hell",
+„1,5 λ → dunkel", „m = 3 fehlt") wird im Test gegen die Rechnung geprüft.
+
+**Festlegungen:**
+- **Teile** (Kurt, 27.10.2026): Ein Schritt besteht aus Teilen; braucht ein Teil der Erklärung
+  eine andere Ansicht, fährt die Kamera dorthin. „Weiter" geht erst durch die Teile. Frühere
+  Teile bleiben abgeblendet darüber stehen, Fortschrittsstriche zeigen den Teil.
+- Ein Teil kann: Kamera (oder `'draufsicht'`), sichtbare Szenenteile, Hilfen (λ-Maß,
+  Ordnungen), Umschalter 3D/Draufsicht, vorgewählten Punkt, eigene Werte, Tempo (Zeitlupe).
+- Werte: beim Betreten eines Schritts alles = Start + Schritt-Startwerte + Teil-Werte bis
+  hierher; innerhalb des Schritts bleiben selbst verstellte Regler stehen, außer ein Teil
+  bringt eigene Werte mit (getestet).
+- Vorgewählte Punkte werden aus der Physik berechnet (Bisektion auf q), nicht von Hand
+  eingetragen — so liegen sie garantiert auf dem Streifen.
+- Neuer Parameter „Offene Spalte" (1/2) für den Einzelspalt-Schritt; der obere Spalt bleibt
+  dabei an seinem Platz. Schirmbild auf das hellste Stück normiert (beim Einzelspalt ist die
+  Mitte nicht die hellste Stelle). Beim Einzelspalt kein Anklicken (keine zwei Wege).
+- Schritt 7 „Formel" mit b = 0,005 mm (Formel passt dort genau), Schritt 9 mit d = 3b
+  (fehlende 3. Ordnung liegt auf dem Bild-Schirm).
+- Reihenfolge wie geplant; „Überlagerung im Detail" vor „Gangunterschied", Ausblick auf
+  Phase 2 als letzter Teil von Schritt 9.
+
+**Ungeprüft:** wie flüssig die Teilwechsel wirken, und ob die Texte für Kurt verständlich
+sind — dafür ist die Abnahme da.
 
 ### Schritt 7 — Freier Modus
 Alle Regler frei, Experiment-Auswahl auf der Startseite.
@@ -399,7 +426,7 @@ Alle Regler frei, Experiment-Auswahl auf der Startseite.
 4. [x] Bild, Formel und Text ändern sich gleichzeitig mit dem Regler (Schritt 3; Gefühl beim Ziehen noch von Kurt zu prüfen)
 5. [ ] Zeitlupe und Pause beeinflussen nur die Animation, nicht das Ergebnis
 6. [x] Gangunterschied beim Anklicken stimmt mit der Physik überein (Schritt 5, getestet an Maxima, Minimum, fehlender Ordnung)
-7. [ ] Tour von Kurt durchgesehen und abgenommen
+7. [ ] Tour von Kurt durchgesehen und abgenommen (gebaut 27.10.2026, Abnahme offen)
 
 ## Ausdrücklich nicht in diesem Plan
 

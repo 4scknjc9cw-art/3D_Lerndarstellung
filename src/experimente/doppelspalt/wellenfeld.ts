@@ -4,7 +4,7 @@
 
 import * as THREE from 'three';
 import type { Aufbau } from './physik';
-import { punktquellen } from './physik';
+import { offeneSpalte, punktquellen } from './physik';
 
 export const MAX_QUELLEN = 64; // beide Spalte zusammen
 
@@ -13,6 +13,7 @@ const gemeinsam = /* glsl */ `
   uniform float uPhase;
   uniform float uQuellen[${MAX_QUELLEN}];
   uniform int uAnzahl;
+  uniform float uJeSpalt;
   uniform float uRmin;
   uniform float uSkala;
   uniform float uHoehe;
@@ -32,8 +33,8 @@ const gemeinsam = /* glsl */ `
       // p.x / r = Neigungsfaktor cos θ, wie in physik.ts.
       s += (p.x / r) * cos(uK * r - uPhase) / sqrt(r);
     }
-    // Wie in physik.ts: durch die Quellenzahl je Spalt teilen (uAnzahl zählt beide Spalte).
-    return s / (float(uAnzahl) * 0.5) * uSkala;
+    // Wie in physik.ts: durch die Quellenzahl je Spalt teilen.
+    return s / uJeSpalt * uSkala;
   }
 `;
 
@@ -72,6 +73,7 @@ export function wellenMaterial(einfallend: boolean): THREE.ShaderMaterial {
       uPhase: { value: 0 },
       uQuellen: { value: new Array(MAX_QUELLEN).fill(0) },
       uAnzahl: { value: 0 },
+      uJeSpalt: { value: 1 },
       uRmin: { value: 0.05 },
       // Hinter der Blende kommt physikalisch viel weniger an als davor. Die Anzeige wird dort
       // bewusst verstärkt, sonst sieht man die Interferenz kaum — die Rechnung bleibt gleich.
@@ -85,7 +87,7 @@ export function wellenMaterial(einfallend: boolean): THREE.ShaderMaterial {
 
 /** Überträgt einen Aufbau (Darstellungsmaßstab) in die Shader-Werte. */
 export function setzeAufbau(material: THREE.ShaderMaterial, bild: Aufbau): void {
-  const quellen = [...punktquellen(bild, 'oben'), ...punktquellen(bild, 'unten')];
+  const quellen = offeneSpalte(bild).flatMap((s) => punktquellen(bild, s));
   if (quellen.length > MAX_QUELLEN) {
     // Laut scheitern statt still falsch rechnen (Regel 8).
     throw new Error(`Zu viele Huygens-Quellen für den Shader: ${quellen.length} > ${MAX_QUELLEN}`);
@@ -93,6 +95,7 @@ export function setzeAufbau(material: THREE.ShaderMaterial, bild: Aufbau): void 
   const u = material.uniforms;
   u.uK.value = (2 * Math.PI) / bild.wellenlaenge;
   u.uAnzahl.value = quellen.length;
+  u.uJeSpalt.value = bild.quellenJeSpalt;
   const feld = u.uQuellen.value as number[];
   feld.fill(0);
   quellen.forEach((q, i) => (feld[i] = q));

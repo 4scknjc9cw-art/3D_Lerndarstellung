@@ -7,7 +7,8 @@ import { darstellungsAufbau } from './darstellung';
 import { wellenlaengeZuFarbe } from './farbe';
 import { konstruiere } from './konstruktion';
 import { KonstruktionsBild } from './konstruktionsbild';
-import { type Aufbau, schirmIntensitaet } from './physik';
+import { LambdaMass, Ordnungen } from './hilfen';
+import { type Aufbau, feld, intensitaet } from './physik';
 import { setzeAufbau, wellenMaterial } from './wellenfeld';
 
 const BREITE = 16; // Ausdehnung quer zur Ausbreitung (z von −8 bis +8)
@@ -34,6 +35,8 @@ export class DoppelspaltSzene {
   private konstruktion = new KonstruktionsBild();
   private bild?: Aufbau;
   private auswahl: Punkt | null = null;
+  private lambdaMass = new LambdaMass();
+  private ordnungen = new Ordnungen();
 
   constructor() {
     this.schirmTextur.colorSpace = THREE.SRGBColorSpace;
@@ -62,7 +65,7 @@ export class DoppelspaltSzene {
     // Ebene zeigt danach in −x (zur Blende hin); u läuft dabei in +z.
     schirmGeo.rotateY(-Math.PI / 2);
     this.schirm = new THREE.Mesh(schirmGeo, new THREE.MeshBasicMaterial({ map: this.schirmTextur }));
-    this.gruppe.add(this.schirm, this.konstruktion.gruppe);
+    this.gruppe.add(this.schirm, this.konstruktion.gruppe, this.lambdaMass.gruppe, this.ordnungen.gruppe);
 
     this.teile = new Map<string, THREE.Object3D>([
       ['laser', laserGruppe],
@@ -75,6 +78,17 @@ export class DoppelspaltSzene {
 
   /** Namen, die Tour-Schritte in `sichtbar` verwenden dürfen. */
   readonly teile: Map<string, THREE.Object3D>;
+
+  /** Hilfen, die nur auf Wunsch eines Tour-Teils erscheinen (nie im freien Modus). */
+  readonly hilfen = ['lambdaMass', 'ordnungen'];
+
+  zeigeHilfen(namen: readonly string[]): void {
+    for (const name of namen) {
+      if (!this.hilfen.includes(name)) throw new Error(`Unbekannte Hilfe: ${name}`);
+    }
+    this.lambdaMass.zeige(namen.includes('lambdaMass'));
+    this.ordnungen.zeige(namen.includes('ordnungen'));
+  }
 
   zeige(namen: readonly string[] | null): void {
     for (const name of namen ?? []) {
@@ -105,6 +119,8 @@ export class DoppelspaltSzene {
 
     this.baueBlende(bild);
     this.zeichneSchirm(bild, farbe);
+    this.lambdaMass.setzeWellenlaenge(bild.wellenlaenge);
+    this.ordnungen.setze(bild, BREITE / 2, this.schirm.position.y + 1.5);
     this.bild = bild;
     // Ändert sich der Aufbau, wandert die Konstruktion mit (z. B. Schirm bei neuem L).
     this.zeigeAuswahl(this.auswahl);
@@ -116,7 +132,8 @@ export class DoppelspaltSzene {
    * Klick unnötig langsam. Die Wellenhöhe (±0,22) spielt beim Zielen keine Rolle.
    */
   trefferpunkt(strahl: THREE.Ray): Punkt | null {
-    if (!this.bild) return null;
+    // Beim Einzelspalt gibt es keine zwei Wege und damit keinen Gangunterschied.
+    if (!this.bild || this.bild.spalte === 1) return null;
     const L = this.bild.schirmabstand;
     const kandidaten: { punkt: Punkt; abstand: number }[] = [];
     const treffer = new THREE.Vector3();
@@ -145,7 +162,7 @@ export class DoppelspaltSzene {
 
   zeigeAuswahl(punkt: Punkt | null): void {
     this.auswahl = punkt;
-    if (!punkt || !this.bild) {
+    if (!punkt || !this.bild || this.bild.spalte === 1) {
       this.konstruktion.zeige(false);
       return;
     }
@@ -160,6 +177,7 @@ export class DoppelspaltSzene {
     const phase = (2 * Math.PI * simSekunden) / PERIODE_SEK;
     this.feldMaterial.uniforms.uPhase.value = phase;
     this.einfallMaterial.uniforms.uPhase.value = phase;
+    this.lambdaMass.folge(phase);
   }
 
   /** Waagerechtes Gitter von x = 0 bis laenge, z über die ganze Breite. */
@@ -183,11 +201,18 @@ export class DoppelspaltSzene {
     const halbD = bild.spaltabstand / 2;
     const halbB = bild.spaltbreite / 2;
     // Drei Stege: außen unten, Mitte, außen oben — dazwischen die beiden Spalte.
-    const stege: [number, number][] = [
-      [-BREITE / 2, -halbD - halbB],
-      [-halbD + halbB, halbD - halbB],
-      [halbD + halbB, BREITE / 2],
-    ];
+    // Beim Einzelspalt ist der untere Spalt zu: ein durchgehender Steg bis zum oberen.
+    const stege: [number, number][] =
+      bild.spalte === 1
+        ? [
+            [-BREITE / 2, halbD - halbB],
+            [halbD + halbB, BREITE / 2],
+          ]
+        : [
+            [-BREITE / 2, -halbD - halbB],
+            [-halbD + halbB, halbD - halbB],
+            [halbD + halbB, BREITE / 2],
+          ];
     for (const [von, bis] of stege) {
       const steg = new THREE.Mesh(
         new THREE.BoxGeometry(dicke, hoehe, bis - von),
@@ -201,10 +226,15 @@ export class DoppelspaltSzene {
   private zeichneSchirm(bild: Aufbau, farbe: [number, number, number]): void {
     // Schirmbild aus physik.ts (64-Bit, dieselbe Rechnung wie die Tests), im Bildmaßstab —
     // damit die hellen Streifen genau dort liegen, wo im Wellenfeld die Berge ankommen.
+    // Auf das hellste Stück bezogen statt auf die Mitte: beim Einzelspalt (oben, nicht mittig)
+    // ist die Schirmmitte nicht die hellste Stelle.
     const daten = this.schirmTextur.image.data as Uint8Array;
+    const werte = Array.from({ length: SCHIRM_PUNKTE }, (_, i) =>
+      intensitaet(feld(bild, bild.schirmabstand, -BREITE / 2 + (BREITE * (i + 0.5)) / SCHIRM_PUNKTE)),
+    );
+    const hellste = Math.max(...werte);
     for (let i = 0; i < SCHIRM_PUNKTE; i++) {
-      const z = -BREITE / 2 + (BREITE * (i + 0.5)) / SCHIRM_PUNKTE;
-      const hell = Math.min(1, schirmIntensitaet(bild, z));
+      const hell = werte[i] / hellste;
       daten[i * 4] = Math.round(255 * hell * farbe[0]);
       daten[i * 4 + 1] = Math.round(255 * hell * farbe[1]);
       daten[i * 4 + 2] = Math.round(255 * hell * farbe[2]);

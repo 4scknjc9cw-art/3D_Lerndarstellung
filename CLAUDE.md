@@ -21,11 +21,15 @@ dort nachtragen. Der Plan ist ein lebendes Dokument.
   als Umschalter schon mit drin.
 - 27.10.2026: Tour-Schritte 1–2 mit „warum" neu geschrieben, Schritt 5 (Draufsicht,
   Klick, Gangunterschied-Dreieck) ✅ als Tour-Schritt 3. 84 Tests grün.
-- Nächster Schritt: **Schritt 6 — restliche Tour-Schritte** (Plan: „Tour Phase 1", Regel
-  „warum + Weg des Lichts"). Auf Zuruf, nicht von selbst anfangen.
+- 27.10.2026: Schritt 6 Tour-Inhalt ✅ gebaut: 9 Schritte / 27 Teile mit Kamerafahrt je Teil,
+  136 Tests grün. **Abnahme durch Kurt offen.**
+- Nächster Schritt: Kurts Rückmeldung zur Tour einarbeiten, dann **Schritt 7** (Startseite,
+  Feinschliff). Auf Zuruf, nicht von selbst anfangen.
 
 Kurts Regel für Tour-Texte: jeder Schritt erklärt **warum**, folgt dem Weg des Lichts, Formeln
-erst nach der Herleitung im Bild.
+erst nach der Herleitung im Bild. Braucht ein Teil der Erklärung eine andere Ansicht, bekommt
+er einen eigenen Tour-Teil mit eigener Kamera. Behauptet ein Text etwas über einen
+vorgewählten Punkt, gehört ein Test dazu (`tour.test.ts`).
 
 Nicht neu diskutieren: kein Vorhersage-Modus, kein KI-Fragefeld, nur PC/Laptop, kein Server,
 echte Physik statt Animation, GitHub Pages mit öffentlichem Repo, 2D-Draufsicht nur in
@@ -73,6 +77,7 @@ Flüssigkeit der Animation und Kamerafahrten, Lesbarkeit der Texte — braucht K
 - Bildschirmfoto zum Selbstprüfen: `npx vite preview --port 4173`, dann Chrome
   `--headless=new --enable-unsafe-swiftshader --use-angle=swiftshader --screenshot=…`.
   Bildrate dort ist bedeutungslos (keine Grafikkarte). Prüfhilfen in der Adresse:
-  `?kamera=x,y,z,zielX,zielY,zielZ`, `?werte=d:0.0002,lambda:6.5e-7` (SI), `?fps`.
+  `?kamera=x,y,z,zielX,zielY,zielZ`, `?werte=d:0.0002,lambda:6.5e-7` (SI), `?fps`,
+  `?schritt=5&teil=3`, `?frei`, `?draufsicht`, `?klick=x,z` (x = 99 = Schirm).
 - Neue Reglerbereiche immer gegen `index.test.ts` (alle Reglerecken) laufen lassen — dort ist
   schon einmal ein ineinanderlaufender Spalt aufgefallen.

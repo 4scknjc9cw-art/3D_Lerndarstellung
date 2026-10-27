@@ -99,6 +99,15 @@
         font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--akzent);
       }
       .auswahl-kopf button { background: transparent; font-size: 18px; line-height: 1; padding: 0 4px; }
+      /* Frühere Teile eines Schritts bleiben lesbar, treten aber zurück. */
+      .erklaerung .teil.frueher { opacity: 0.45; }
+      .erklaerung .teil.aktiv { border-left: 3px solid var(--akzent); padding-left: 10px; margin-left: -13px; }
+      .erklaerung .teil + .teil { margin-top: 6px; }
+      .teil-punkte { display: flex; gap: 6px; margin: 6px 0 2px; }
+      .teil-punkte[hidden] { display: none; }
+      .teil-punkte span { width: 22px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.15); }
+      .teil-punkte span.erledigt { background: rgba(255, 140, 46, 0.45); }
+      .teil-punkte span.aktiv { background: var(--akzent); }
       .fps {
         position: fixed; top: 16px; right: 424px; font: 14px monospace;
         background: rgba(0, 0, 0, 0.6); padding: 4px 8px; border-radius: 6px;
