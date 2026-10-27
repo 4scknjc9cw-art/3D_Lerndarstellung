@@ -11,8 +11,13 @@ dort nachtragen. Der Plan ist ein lebendes Dokument.
 - 27.10.2026: Plan geschrieben, Entscheidungen mit Kurt geklärt (siehe Plan, „Entscheidungen").
 - 27.10.2026: Schritt 0 gebaut — Gerüst + drehender Würfel, öffentliches Repo
   `4scknjc9cw-art/3D_Lerndarstellung`, GitHub Pages: https://4scknjc9cw-art.github.io/3D_Lerndarstellung/
-  Abnahme durch Kurt (Lesezeichen auf PC **und** Laptop) steht aus.
-- Nächster Schritt: **Schritt 1 — Physik-Kern**. Auf Zuruf, nicht von selbst anfangen.
+  PC von Kurt abgenommen (27.10.2026), Laptop steht aus.
+- 27.10.2026: Schritt 1 Physik-Kern ✅ — 9 Tests grün, ≤ 0,015 % gegen cos²·sinc²
+  ([Messung](docs/schritt1-messung.md)).
+- 27.10.2026: Schritt 2 Szene + Wellenfeld gebaut, 16 Tests grün. **Bildrate ungemessen**
+  (Kurt: Adresse mit `?fps` auf PC und Laptop öffnen).
+- Nächster Schritt: **Schritt 3 — Parameter, Regler, gekoppelter Text**. Auf Zuruf, nicht
+  von selbst anfangen.
 
 Nicht neu diskutieren: kein Vorhersage-Modus, kein KI-Fragefeld, nur PC/Laptop, kein Server,
 echte Physik statt Animation, GitHub Pages mit öffentlichem Repo, 2D-Draufsicht nur in
@@ -40,6 +45,9 @@ Kurt startet nie etwas, er nutzt nur das Lesezeichen.
 
 Deutsche Namen für Fachliches (`spaltabstand`, `wellenlaenge`), Kommentare erklären das Warum.
 Physik in reinen Funktionen ohne Grafik, damit sie testbar ist.
+Farben: sehr dunkles, angenehmes Schwarz (`--hintergrund` #131315) + Orange (`--akzent`) für
+Bedienung/Hervorhebung, als CSS-Variablen in `index.html`. Licht behält seine physikalische
+Farbe aus `farbe.ts`.
 
 ## Was sich nicht von selbst testen lässt
 
@@ -49,3 +57,11 @@ Flüssigkeit der Animation und Kamerafahrten, Lesbarkeit der Texte — braucht K
 
 - Darstellung ist nicht maßstabsgetreu (Licht-Wellenlänge viel zu klein); gerechnet wird mit
   echten Werten. Die beiden Maßstäbe nie vermischen.
+- `d·sin θ = mλ` ist nur für schmale Spalte genau — nicht als Prüfmaßstab für breite Spalte
+  nehmen, dort gilt cos²·sinc² (Maxima rücken echt nach innen).
+- Shader rechnen mit 32-Bit-Zahlen: echte Lichtwerte (k·r ≈ 10⁷) gehen dort nicht.
+- Die Shader-Formel in `wellenfeld.ts` ist eine Kopie von `feldVonSpalt`/`auslenkung` in
+  `physik.ts` — wer die eine ändert, muss die andere mitziehen.
+- Bildschirmfoto zum Selbstprüfen: `npx vite preview --port 4173`, dann Chrome
+  `--headless=new --enable-unsafe-swiftshader --use-angle=swiftshader --screenshot=…`.
+  Bildrate dort ist bedeutungslos (keine Grafikkarte).

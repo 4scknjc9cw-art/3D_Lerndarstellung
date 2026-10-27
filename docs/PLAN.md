@@ -103,8 +103,10 @@ Schirm-Intensität als eigene Rechenfunktion existiert und nicht nur im Grafik-P
 │     └─ doppelspalt/
 │        ├─ physik.ts          reine Rechenfunktionen (Feld, Schirm-Intensität, Maxima)
 │        ├─ physik.test.ts     prüft physik.ts gegen Lehrbuchformeln
+│        ├─ darstellung.ts     Umrechnung echte Werte → Darstellungsmaßstab (+ Test)
+│        ├─ farbe.ts           Wellenlänge → sichtbare Farbe
 │        ├─ szene.ts           3D-Aufbau: Lichtquelle, Blende, Schirm, Wellenfeld
-│        ├─ wellenfeld.glsl    Shader: Wellenüberlagerung pro Bildpunkt
+│        ├─ wellenfeld.ts      Shader: Wellenüberlagerung je Gitterpunkt
 │        ├─ tour-welle.ts      Tour-Schritte Phase 1 (Daten + Texte)
 │        ├─ tour-quanten.ts    Platzhalter, Phase 2
 │        └─ tour-elektronen.ts Platzhalter, Phase 3
@@ -149,7 +151,12 @@ sichtbar angezeigt wird.
 | Bildrate am Laptop (schwächeres Gerät) | ≥ 50 Bilder/s, flüssig | — |
 | Kamerafahrt zwischen Schritten | 1–2 s, ohne Ruckeln | — |
 | Laden bis erstes Bild | < 3 s | — |
-| Physik vs. Lehrbuchformel (Lage der Maxima) | < 1 % Abweichung im Kleinwinkelbereich | — |
+| Physik vs. Lehrbuchformel (Lage der Maxima) | < 1 % Abweichung im Kleinwinkelbereich | ≤ 0,015 % gegen cos²·sinc² ✅ ([Messung](schritt1-messung.md)) |
+
+Korrektur (27.10.2026): Hier war gemeint „gegen `d·sin θ = mλ`". Das war als Prüfmaßstab
+falsch: die Schulformel gilt nur für schmale Spalte. Bei b = d/5 rücken die Maxima durch die
+Einzelspalt-Hülle echt bis 5 % nach innen. Maßstab ist darum die volle Formel cos²·sinc²;
+gegen die Schulformel wird nur bei schmalen Spalten (b = d/20, < 0,25 %) geprüft.
 
 Wird die Bildrate gerissen, wird zuerst die Auflösung des Wellenfelds gesenkt, nicht die Zahl
 der Punktquellen (die trägt die Physik).
@@ -198,15 +205,63 @@ Würfel, veröffentlicht unter der festen Adresse. *Tracer:* funktional belanglo
 dass „ändern → hochladen → im Lesezeichen sichtbar" auf PC und Laptop trägt.
 **Prüfung:** Lesezeichen auf beiden Geräten öffnen, Würfel dreht sich.
 
-### Schritt 1 — Physik-Kern
+### Schritt 1 — Physik-Kern ✅ erledigt (27.10.2026)
 `physik.ts` als reine Rechenfunktionen, `physik.test.ts` prüft Lage der Maxima, Minima und
 Hülle gegen die Lehrbuchformeln. Noch kein Bild.
 **Prüfung:** `npm test` grün; Abweichungen als Zahlen festgehalten.
 
-### Schritt 2 — Szene und Wellenfeld
+**Ergebnis:** 9 Tests grün. Huygens-Rechnung (16 Punktquellen je Spalt) trifft cos²·sinc² auf
+≤ 0,015 % des Streifenabstands, Minima exakt (Helligkeit < 10⁻⁴), fehlende 5. Ordnung bei
+d = 5b erscheint von selbst. Details: [schritt1-messung.md](schritt1-messung.md).
+
+**Festlegungen:** gerechnet wird in Metern mit echten Werten, nie im Darstellungsmaßstab.
+`feldVonSpalt` ist getrennt von `feld` — das ist die Naht für den Welcher-Weg-Detektor
+(Phase 2: Intensitäten statt Wellen addieren). `auslenkung(zeiger, phase)` liefert Berg/Tal
+für die Animation.
+
+**Fund beim Bauen:** Die Schulformel `d·sin θ = mλ` ist bei breiten Spalten sichtbar
+ungenau (Maxima bis 5 % nach innen). Siehe Korrektur unter „Budget".
+
+#### Vorgemerkt für Schritt 6 (Tour-Inhalt)
+Der Text zu Schritt 9 „Spaltbreite" sollte sagen, dass die Maxima mit breiteren Spalten
+leicht nach innen rücken und `d·sin θ = mλ` darum eine Näherung für schmale Spalte ist —
+sonst wundert man sich, wenn man im Bild nachmisst. In Schritt 7 „Formel" schmale Spalte als
+Startwert nehmen, damit Formel und Bild dort sichtbar übereinstimmen.
+
+#### Vorgemerkt für Schritt 2 (Shader)
+Die Grafikkarte rechnet mit 32-Bit-Zahlen (≈ 7 Stellen). Bei echten Werten ist k·r ≈ 10⁷ —
+die Phase wäre im Shader Rauschen. Der Shader muss im Darstellungsmaßstab rechnen (dort ist
+λ groß); der Schirm-Verlauf kommt aus `physik.ts` (64-Bit) als Textur bzw. Kurve.
+
+### Schritt 2 — Szene und Wellenfeld ✅ gebaut (27.10.2026), Bildrate noch ungemessen
 Lichtquelle, Blende mit zwei Spalten, Schirm; Wellenfeld als Shader; Zeitsteuerung (Pause,
 Zeitlupe). Hinweis „nicht maßstabsgetreu".
 **Prüfung:** Bildrate am Laptop gemessen; Streifenlage im Bild = Physik-Kern.
+
+**Ergebnis:** 16 Tests grün (9 Physik, 7 Darstellung/Farbe). Bildschirmfoto mit unsichtbarem
+Chrome geprüft: keine Fehler in der Konsole, Kreiswellen, Auslöschungslinien und Schirmstreifen
+sichtbar und zueinander passend. Bildrate: **ungeprüft** — der Testbrowser rechnet ohne
+Grafikkarte (1 Bild/s, sagt nichts). Messung bei Kurt mit `…/3D_Lerndarstellung/?fps`.
+
+**Festlegungen:**
+- `darstellung.ts` übersetzt echt → Bild: λ_Bild = 0,35 bei 500 nm, d_Bild = 2,8 bei 0,1 mm
+  (d/λ = 8 statt 200), b mit demselben Faktor wie d (d/b und fehlende Ordnungen bleiben),
+  L_Bild = 12 · L/m, begrenzt auf 6…16. Tests sichern, dass jede Änderung im Bild in die
+  richtige Richtung wirkt.
+- Schirmbild = `schirmIntensitaet` aus `physik.ts` mit dem **Bild**-Aufbau (64-Bit), damit es
+  genau zum sichtbaren Wellenfeld passt. Zahlen im Text kommen aus dem **echten** Aufbau.
+- Shader (`wellenfeld.ts` statt `.glsl`, damit Quellenzahl und Rechnung an einer Stelle stehen)
+  rechnet dieselbe Formel wie `feldVonSpalt`/`auslenkung`. Rechnet nur in den Gitterpunkten
+  (Abstand λ_Bild/10), nicht pro Bildpunkt — spart Grafikleistung am Laptop.
+- Anzeige hinter der Blende 2,75-fach verstärkt (`uSkala`), sonst ist die Interferenz kaum zu
+  sehen; davor 0,8. Betrifft nur die Helligkeit des Bilds, nicht die Rechnung.
+- Vereinfachung: Reflexion an der Blende ist weggelassen (vor der Blende nur die einfallende
+  ebene Welle).
+
+**Funde beim Bauen:** Im Bild ist der Schirm bei L_Bild = 12 im Nahfeld (d²/λ ≈ 22 > L), das
+Bild-Schirmmuster ist also streng genommen ein Fresnel-Muster. Es stimmt trotzdem, weil es aus
+derselben Huygens-Summe kommt wie das Wellenfeld — nur die *Lehrbuch*-Formel cos²·sinc² gilt
+im Bild nicht exakt. Für die Zahlen ist das egal (echter Aufbau: d²/λ = 2 cm ≪ 1 m).
 
 ### Schritt 3 — Parameter, Regler, gekoppelter Text
 Zentraler Parameterspeicher; Regler; Text-Panel mit KaTeX-Formel und Live-Werten.
@@ -235,7 +290,7 @@ Alle Regler frei, Experiment-Auswahl auf der Startseite.
 ## Verifikation Phase 1
 
 1. [ ] Feste Adresse funktioniert auf PC und Laptop ohne Start-Befehl
-2. [ ] Physik-Tests grün, Abweichung < 1 % im Kleinwinkelbereich
+2. [x] Physik-Tests grün, Abweichung ≤ 0,015 % gegen cos²·sinc² ([Messung](schritt1-messung.md))
 3. [ ] Bildrate am Laptop ≥ 50 Bilder/s
 4. [ ] Bild, Formel und Text ändern sich gleichzeitig mit dem Regler
 5. [ ] Zeitlupe und Pause beeinflussen nur die Animation, nicht das Ergebnis
