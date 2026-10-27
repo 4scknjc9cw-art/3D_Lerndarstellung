@@ -107,6 +107,7 @@ Schirm-Intensität als eigene Rechenfunktion existiert und nicht nur im Grafik-P
 │        ├─ farbe.ts           Wellenlänge → sichtbare Farbe
 │        ├─ szene.ts           3D-Aufbau: Lichtquelle, Blende, Schirm, Wellenfeld
 │        ├─ wellenfeld.ts      Shader: Wellenüberlagerung je Gitterpunkt
+│        ├─ index.ts           der Doppelspalt als Experiment (Parameter, Größen, Touren)
 │        ├─ tour-welle.ts      Tour-Schritte Phase 1 (Daten + Texte)
 │        ├─ tour-quanten.ts    Platzhalter, Phase 2
 │        └─ tour-elektronen.ts Platzhalter, Phase 3
@@ -303,16 +304,48 @@ gebaut wird): **ungeprüft**, braucht Kurts Blick.
 b = 0,04 mm bliebe nur 0,02 mm Steg — die Spalte liefen fast ineinander. b ist darum auf
 0,03 mm begrenzt.
 
-### Schritt 4 — Tour-Maschine
+### Schritt 4 — Tour-Maschine ✅ erledigt (27.10.2026)
 `tour.ts` spielt Schritte aus Daten ab; Kamerafahrten; freie Regler je Schritt; vor/zurück.
 *Tracer:* Tour mit zwei Dummy-Schritten.
 **Prüfung:** vor/zurück springt flüssig, Regler sperren und freigeben sich korrekt.
+
+**Ergebnis:** 77 Tests grün (u. a. Zurückspringen stellt den Schritt exakt wieder her, Tippfehler
+in Schritten fallen beim Laden auf, alle Platzhalter aller Touren gültig). Bildschirmfotos:
+Schritt 1 blendet Feld und Schirm aus, Schritt 2 zeigt nur Regler d; die Einflug-Fahrt endet
+genau in der Schritt-1-Ansicht. Flüssigkeit der Fahrt: **ungeprüft** (Testbrowser ohne Grafikkarte).
+
+**Festlegungen:**
+- Ein Schritt setzt beim Betreten **alle** Parameter auf Start + eigene Startwerte — so sieht er
+  immer gleich aus, egal von wo man kommt. Im freien Modus bleiben die Werte stehen.
+- Kamerafahrt 1,6 s auf einer Kugel um den Blickpunkt (schwenkt um das Experiment statt
+  hindurch), kürzester Drehweg, sanftes An-/Abbremsen. Greift man zur Maus, endet die Fahrt.
+- Seitenfeld oben „Geführte Tour | Frei ausprobieren". Der freie Modus ist damit schon da
+  (Erklärfeld und Regler teilen sich beide Modi) — Schritt 7 schrumpft auf Startseite mit
+  Experiment-Auswahl und Feinschliff.
+- Pfeiltasten ← → blättern, außer wenn ein Regler den Fokus hat (dort bewegen sie den Regler).
+- Szenenteile mit Namen: `laser`, `einfall`, `blende`, `feld`, `schirm`.
+- Touren ohne Schritte (Quanten, Elektronen) erscheinen nicht — die Platzhalter liegen bereit.
+- Prüfhilfen: `?schritt=2`, `?frei`.
+
+#### Vorgemerkt für Schritt 6
+Kameraansichten hängen an festen Koordinaten; bei geändertem L wandert der Schirm. Für
+Schritte, die auf den Schirm blicken, entweder L festsetzen (Startwert) oder die Ansicht
+später aus dem Aufbau berechnen lassen. Für Schritt 1 („Was ist eine Welle") braucht es
+vermutlich einen Szenenteil ohne Spalte (Wand ganz zu) oder ganz ohne Blende.
 
 ### Schritt 5 — Draufsicht und Wege anklicken
 Umschalter 3D ↔ Draufsicht, nur in den Schritten, die ihn freigeben (voraussichtlich 5–7);
 Klick auf den Schirm zeichnet beide Wege und zeigt den
 Gangunterschied in λ.
 **Prüfung:** Klick auf Maximum m = 2 zeigt „2,0 λ" (± Rundung).
+
+#### Vorgemerkt (Kurt, 27.10.2026): Gangunterschied-Dreieck in der Draufsicht
+In der Draufsicht soll das Lehrbuch-Dreieck eingezeichnet werden: beide Wege von den Spalten
+zum Schirmpunkt, das Lot vom einen Spalt auf den Weg des anderen, und das kurze Reststück
+Δs = d · sin θ farbig hervorgehoben, mit Winkel θ an der Blende. Kurts Rückmeldung zu Schritt 3:
+die Formeln sind ohne diese Herleitung schwer zu verstehen — das Dreieck ist die Brücke
+zwischen Bild und `d · sin θ = m · λ`. Im Bild sind die Winkel vergrößert; das Dreieck wird im
+Bildmaßstab gezeichnet, die Zahlen daneben kommen aus dem echten Aufbau.
 
 ### Schritt 6 — Tour-Inhalt Phase 1
 Alle neun Schritte mit Ansichten und Texten. Kurt liest jeden Text gegen sein Schulwissen.

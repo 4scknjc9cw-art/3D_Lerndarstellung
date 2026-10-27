@@ -4,6 +4,7 @@
 
 import type * as THREE from 'three';
 import type { Werte } from './parameter';
+import type { Ansicht, Tour } from './tour';
 
 /** Wie ein Wert mit Einheit angezeigt wird. */
 export interface Einheit {
@@ -35,6 +36,10 @@ export interface ExperimentSzene {
   readonly gruppe: THREE.Object3D;
   setze(werte: Werte): void;
   animiere(simSekunden: number): void;
+  /** Benannte Teile, die ein Tour-Schritt ein- und ausblenden darf. */
+  readonly teile: readonly string[];
+  /** null = alles zeigen. Unbekannte Namen sind ein Fehler. */
+  zeige(teile: readonly string[] | null): void;
 }
 
 export interface Experiment {
@@ -43,6 +48,10 @@ export interface Experiment {
   erzeugeSzene(): ExperimentSzene;
   /** Alle Größen, die Text und Formeln einsetzen dürfen: Parameter und daraus berechnete. */
   groessen(werte: Werte): Record<string, Groesse>;
-  /** Erklärfeld außerhalb der Tour (bis Schritt 4/7 die Tour und den freien Modus liefern). */
+  /** Erklärfeld im freien Modus. */
   erklaerung: { formeln: string[]; text: string };
+  /** Startansicht im freien Modus. */
+  ansicht: Ansicht;
+  /** Eine Tour je Phase (Welle, Quanten, Elektronen), in Lernreihenfolge. */
+  touren: Tour[];
 }

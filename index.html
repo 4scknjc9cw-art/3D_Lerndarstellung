@@ -37,10 +37,29 @@
       .hinweis b { color: var(--akzent); }
       .seitenfeld {
         position: fixed; top: 16px; right: 16px; bottom: 16px; width: 390px;
-        overflow-y: auto; background: var(--flaeche); border: 1px solid var(--rand);
-        border-radius: 12px; padding: 16px 20px; box-sizing: border-box;
+        display: flex; flex-direction: column; overflow: hidden;
+        background: var(--flaeche); border: 1px solid var(--rand);
+        border-radius: 12px; box-sizing: border-box;
       }
-      .seitenfeld h1 { font-size: 20px; margin: 0 0 8px; }
+      .seitenfeld .inhalt { flex: 1; overflow-y: auto; padding: 4px 20px 16px; }
+      .seitenfeld button { font: inherit; color: inherit; cursor: pointer; border: 0; }
+      .seitenfeld button:disabled { opacity: 0.35; cursor: default; }
+      .modus { display: flex; gap: 4px; padding: 10px 12px 6px; }
+      .modus button {
+        flex: 1; background: transparent; padding: 7px 0; border-radius: 7px; font-size: 14px;
+      }
+      .modus button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); }
+      .modus button.aktiv { background: rgba(255, 140, 46, 0.16); color: var(--akzent); font-weight: 600; }
+      .fortschritt { font-size: 12.5px; color: #a8a39b; margin-top: 10px; }
+      .seitenfeld h1 { font-size: 20px; margin: 4px 0 4px; }
+      .navigation {
+        display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--rand);
+      }
+      .navigation[hidden] { display: none; }
+      .navigation button { flex: 1; padding: 10px 0; border-radius: 8px; font-size: 15px; }
+      .navigation .zweitrangig { background: rgba(255, 255, 255, 0.07); }
+      .navigation .hauptknopf { background: var(--akzent); color: var(--akzent-text); font-weight: 600; }
+      .regler[hidden], .seitenfeld h2[hidden] { display: none; }
       .seitenfeld h2 {
         font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em;
         color: var(--akzent); margin: 20px 0 10px;

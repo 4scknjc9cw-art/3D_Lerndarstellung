@@ -4,6 +4,9 @@ import type { Einheit, Experiment } from '../../kern/experiment';
 import type { Werte } from '../../kern/parameter';
 import { type Aufbau, maximumWinkel, standardAufbau, streifenabstand } from './physik';
 import { DoppelspaltSzene } from './szene';
+import { tourElektronen } from './tour-elektronen';
+import { tourQuanten } from './tour-quanten';
+import { tourWelle } from './tour-welle';
 
 const NM: Einheit = { zeichen: 'nm', faktor: 1e-9, stellen: 0 };
 const MM2: Einheit = { zeichen: 'mm', faktor: 1e-3, stellen: 2 };
@@ -93,8 +96,13 @@ export const doppelspalt: Experiment = {
       gruppe: szene.gruppe,
       setze: (werte) => szene.setze(aufbauAus(werte)),
       animiere: (t) => szene.animiere(t),
+      teile: [...szene.teile.keys()],
+      zeige: (teile) => szene.zeige(teile),
     };
   },
+
+  ansicht: { position: [-7, 13, 18], ziel: [3.5, 0, 0] },
+  touren: [tourWelle, tourQuanten, tourElektronen],
 
   groessen(werte) {
     const aufbau = aufbauAus(werte);

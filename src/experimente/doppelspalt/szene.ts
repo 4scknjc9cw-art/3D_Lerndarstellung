@@ -36,6 +36,7 @@ export class DoppelspaltSzene {
     const einfall = new THREE.Mesh(this.gitter(VORLAUF, GITTER_MIN), this.einfallMaterial);
     einfall.position.x = -VORLAUF;
     this.gruppe.add(einfall, this.feld, this.blende);
+    const laserGruppe = new THREE.Group();
 
     const laser = new THREE.Mesh(
       new THREE.BoxGeometry(1.2, 0.8, 1.6),
@@ -48,13 +49,32 @@ export class DoppelspaltSzene {
       new THREE.MeshStandardMaterial({ color: 0xff8c2e, roughness: 0.4 }),
     );
     streifen.position.set(-VORLAUF - 0.8, 0.45, 0);
-    this.gruppe.add(laser, streifen);
+    laserGruppe.add(laser, streifen);
+    this.gruppe.add(laserGruppe);
 
     const schirmGeo = new THREE.PlaneGeometry(BREITE, 3);
     // Ebene zeigt danach in −x (zur Blende hin); u läuft dabei in +z.
     schirmGeo.rotateY(-Math.PI / 2);
     this.schirm = new THREE.Mesh(schirmGeo, new THREE.MeshBasicMaterial({ map: this.schirmTextur }));
     this.gruppe.add(this.schirm);
+
+    this.teile = new Map<string, THREE.Object3D>([
+      ['laser', laserGruppe],
+      ['einfall', einfall],
+      ['blende', this.blende],
+      ['feld', this.feld],
+      ['schirm', this.schirm],
+    ]);
+  }
+
+  /** Namen, die Tour-Schritte in `sichtbar` verwenden dürfen. */
+  readonly teile: Map<string, THREE.Object3D>;
+
+  zeige(namen: readonly string[] | null): void {
+    for (const name of namen ?? []) {
+      if (!this.teile.has(name)) throw new Error(`Unbekannter Szenenteil: ${name}`);
+    }
+    for (const [name, teil] of this.teile) teil.visible = namen === null || namen.includes(name);
   }
 
   /**

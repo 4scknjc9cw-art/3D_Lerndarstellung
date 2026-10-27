@@ -16,8 +16,11 @@ dort nachtragen. Der Plan ist ein lebendes Dokument.
   ([Messung](docs/schritt1-messung.md)).
 - 27.10.2026: Schritt 2 Szene + Wellenfeld ✅, von Kurt abgenommen. PC 144 Bilder/s,
   Laptop ungemessen (`?fps`).
-- 27.10.2026: Schritt 3 Regler + gekoppelter Text ✅, 73 Tests grün.
-- Nächster Schritt: **Schritt 4 — Tour-Maschine**. Auf Zuruf, nicht von selbst anfangen.
+- 27.10.2026: Schritt 3 Regler + gekoppelter Text ✅, von Kurt abgenommen.
+- 27.10.2026: Schritt 4 Tour-Maschine ✅ (2 Probe-Schritte), 77 Tests grün. Freier Modus ist
+  als Umschalter schon mit drin.
+- Nächster Schritt: **Schritt 5 — Draufsicht, Wege anklicken, Gangunterschied-Dreieck**
+  (Kurts Wunsch, siehe Plan). Auf Zuruf, nicht von selbst anfangen.
 
 Nicht neu diskutieren: kein Vorhersage-Modus, kein KI-Fragefeld, nur PC/Laptop, kein Server,
 echte Physik statt Animation, GitHub Pages mit öffentlichem Repo, 2D-Draufsicht nur in
