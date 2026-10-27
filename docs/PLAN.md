@@ -256,7 +256,16 @@ Grafikkarte (1 Bild/s, sagt nichts). Messung bei Kurt mit `…/3D_Lerndarstellun
 - Anzeige hinter der Blende 2,75-fach verstärkt (`uSkala`), sonst ist die Interferenz kaum zu
   sehen; davor 0,8. Betrifft nur die Helligkeit des Bilds, nicht die Rechnung.
 - Vereinfachung: Reflexion an der Blende ist weggelassen (vor der Blende nur die einfallende
-  ebene Welle).
+  ebene Welle) — entspricht einer schwarzen, Licht schluckenden Blende.
+- Maus (Kurt, 27.10.2026): rechts = Sicht drehen, Mausrad gedrückt = verschieben, Mausrad =
+  Zoom; links frei für das Anklicken in Schritt 5. Prüfhilfe: `?kamera=x,y,z,zielX,zielY,zielZ`.
+
+Korrektur (27.10.2026): Die Huygens-Quellen strahlten anfangs in alle Richtungen gleich stark.
+Kurt fiel auf, dass die Wellen dadurch direkt hinter der Blende seitlich an der Wand
+entlangliefen, „als würden sie durch die Wand glitschen". Das war physikalisch falsch: eine
+Elementarwelle hat einen Neigungsfaktor cos θ (Rayleigh-Sommerfeld) und strahlt entlang der
+Wand gar nicht. Jetzt in `physik.ts` und Shader eingebaut; alle 16 Tests weiter grün, weil
+cos θ bei den kleinen echten Winkeln (≤ 0,03 rad) praktisch 1 ist.
 
 **Funde beim Bauen:** Im Bild ist der Schirm bei L_Bild = 12 im Nahfeld (d²/λ ≈ 22 > L), das
 Bild-Schirmmuster ist also streng genommen ein Fresnel-Muster. Es stimmt trotzdem, weil es aus

@@ -29,7 +29,8 @@ const gemeinsam = /* glsl */ `
       if (i >= uAnzahl) break;
       // uRmin: direkt an der Quelle wäre 1/sqrt(r) unendlich — nur für das Bild gekappt.
       float r = max(length(vec2(p.x, p.y - uQuellen[i])), uRmin);
-      s += cos(uK * r - uPhase) / sqrt(r);
+      // p.x / r = Neigungsfaktor cos θ, wie in physik.ts.
+      s += (p.x / r) * cos(uK * r - uPhase) / sqrt(r);
     }
     // Wie in physik.ts: durch die Quellenzahl je Spalt teilen (uAnzahl zählt beide Spalte).
     return s / (float(uAnzahl) * 0.5) * uSkala;

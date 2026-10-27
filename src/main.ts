@@ -23,6 +23,18 @@ camera.position.set(-6, 11, 15);
 const steuerung = new OrbitControls(camera, renderer.domElement);
 steuerung.target.set(4, 0, 0);
 steuerung.enableDamping = true;
+// Kurts Wunsch: rechts = Sicht drehen, Mausrad gedrückt = verschieben, Mausrad = Zoom.
+// Links bleibt frei — damit werden ab Schritt 5 Punkte am Schirm angeklickt.
+steuerung.mouseButtons = { LEFT: null, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE };
+renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+
+// Nur zum Prüfen per Bildschirmfoto: ?kamera=x,y,z,zielX,zielY,zielZ
+const kameraParam = new URLSearchParams(location.search).get('kamera');
+if (kameraParam) {
+  const [x, y, z, tx, ty, tz] = kameraParam.split(',').map(Number);
+  camera.position.set(x, y, z);
+  steuerung.target.set(tx, ty, tz);
+}
 steuerung.update();
 
 const aufbau = { ...standardAufbau };

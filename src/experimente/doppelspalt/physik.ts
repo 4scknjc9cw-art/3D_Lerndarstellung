@@ -5,7 +5,7 @@
 //   y = quer zur Ausbreitung (Mitte zwischen den Spalten bei y = 0)
 //
 // Modell: Huygens-Prinzip. Jeder Spalt wird in mehrere Punktquellen zerlegt, jede sendet eine
-// Kreiswelle, das Feld ist die Summe. Dadurch entsteht die Einzelspalt-Hülle von selbst —
+// Kreiswelle (mit Neigungsfaktor cos θ, Rayleigh-Sommerfeld), das Feld ist die Summe. Dadurch entsteht die Einzelspalt-Hülle von selbst —
 // gegen die Lehrbuchformel wird das nur geprüft (physik.test.ts), nicht aus ihr gebaut.
 
 export interface Aufbau {
@@ -58,7 +58,10 @@ export function feldVonSpalt(aufbau: Aufbau, spalt: Spalt, x: number, y: number)
   for (const yq of quellen) {
     const r = Math.hypot(x, y - yq);
     // 1/√r: Kreiswelle in der Ebene verteilt ihre Energie auf einen Umfang ∝ r.
-    const amplitude = 1 / Math.sqrt(r) / quellen.length;
+    // x/r = cos θ (Neigungsfaktor): eine Elementarwelle strahlt nach vorn am stärksten und
+    // gar nicht entlang der Wand. Ohne ihn liefen die Wellen direkt hinter der Blende
+    // seitlich weg, als kämen sie durch die Wand (Kurt, 27.10.2026).
+    const amplitude = x / r / Math.sqrt(r) / quellen.length;
     re += amplitude * Math.cos(k * r);
     im += amplitude * Math.sin(k * r);
   }
