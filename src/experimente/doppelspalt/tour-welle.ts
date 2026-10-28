@@ -3,7 +3,12 @@
 // Regeln für die Texte (Kurt, 27.10.2026):
 //   - nicht nur sagen, WAS man sieht, sondern WARUM, und dem Weg des Lichts folgen;
 //   - Formeln erst, wenn das Bild sie vorher hergeleitet hat;
-//   - braucht ein Teil der Erklärung eine andere Ansicht, fährt die Kamera dorthin (Teile).
+//   - braucht ein Teil der Erklärung eine andere Ansicht, fährt die Kamera dorthin (Teile);
+//   - Leser: Oberstufe (13. Klasse) mit Wellen-Grundwissen, aber ohne Vorwissen zum Versuch.
+//     Jeder Begriff wird beim ersten Auftreten erklärt, jeder Schritt baut auf dem vorigen auf;
+//   - knapp formulieren, wenige Zahlen und Formeln im Text (Kurt) — die Zahlen stehen im Bild;
+//   - wenig freies Herumprobieren: Punkte sind vorgewählt, nur in einem Teil darf man P
+//     selbst von Streifen zu Streifen schieben.
 //
 // Szene (Bildmaßstab): Laser bei x ≈ −6, Blende bei x = 0, oberer Spalt bei z = +d/2,
 // Schirm bei x = L (12 beim Standard), Breite z = −8 … +8, y = oben.
@@ -28,7 +33,12 @@ const standard = {
  * Physik berechnet statt von Hand eingetragen, damit der Punkt wirklich auf dem hellen bzw.
  * dunklen Streifen liegt, auch wenn sich der Bildmaßstab einmal ändert.
  */
-function stelle(q: number, x: number | 'schirm', werte: Partial<typeof standard> = {}): Punkt {
+function stelle(
+  q: number,
+  x: number | 'schirm',
+  werte: Partial<typeof standard> = {},
+  einfach = false,
+): Punkt {
   const bild = darstellungsAufbau(aufbauAus({ ...standard, ...werte }));
   const xx = x === 'schirm' ? bild.schirmabstand : x;
   let lo = 0;
@@ -39,7 +49,7 @@ function stelle(q: number, x: number | 'schirm', werte: Partial<typeof standard>
     else hi = z;
   }
   // x = 99 heißt „auf dem Schirm" — der Punkt bleibt dort, auch wenn L sich ändert.
-  return { x: x === 'schirm' ? 99 : xx, z: (lo + hi) / 2, aufSchirm: x === 'schirm' };
+  return { x: x === 'schirm' ? 99 : xx, z: (lo + hi) / 2, aufSchirm: x === 'schirm', einfach };
 }
 
 /** Kamera schräg von vorn-oben auf einen Punkt im Wellenfeld. */
@@ -50,8 +60,9 @@ function nahAn(p: Punkt): { position: [number, number, number]; ziel: [number, n
 const UEBERBLICK = { position: [-5, 12, 13], ziel: [5, 0, 0] } as const;
 const AUF_SCHIRM = { position: [1, 6, 0.5], ziel: [12, 1.2, 0] } as const;
 
-const hell4 = stelle(1, 5);
-const dunkel4 = stelle(0.5, 5);
+// In Schritt 4 nur markiert (ohne Dreieck und Zahlen) — Δs wird erst in Schritt 5 erklärt.
+const hell4 = stelle(1, 5, {}, true);
+const dunkel4 = stelle(0.5, 5, {}, true);
 const ersterHell = stelle(1, 'schirm');
 const ersterDunkel = stelle(1.5, 'schirm');
 const zweiterHell = stelle(2, 'schirm');
@@ -67,37 +78,50 @@ export const tourWelle: Tour = {
   titel: 'Licht als Welle',
   schritte: [
     {
-      titel: 'Eine Lichtwelle',
+      titel: 'Licht ist eine Welle',
       teile: [
         {
-          kamera: { position: [-3.1, 1.25, 5.4], ziel: [-3.1, 0.1, 2.4] },
+          // Exakt von der Seite auf die 3D-Welle (Kurt): fast ohne Perspektive (Öffnungswinkel
+          // 1,5°, weit weg), damit alle Wellenreihen übereinanderliegen und eine Kurve ergeben.
+          // Ganz leicht von oben (0,6°) — exakt waagerecht wäre die Fläche unsichtbar dünn.
+          // Die weiße Linie (Hilfe „profil") sorgt dafür, dass man die Welle sicher als Linie sieht.
+          kamera: { position: [-3, 1.28, 120], ziel: [-3, 0.02, 0], sichtfeld: 1.5 },
           sichtbar: ['laser', 'einfall'],
-          hilfen: ['lambdaMass'],
+          hilfen: ['profil', 'lambdaMass'],
           tempo: 'zeitlupe',
           text:
-            'Der Laser sendet Licht mit genau einer Wellenlänge: λ = [[lambda]]. Licht ist eine ' +
-            'elektromagnetische Welle. Die Höhe im Bild zeigt, wie stark das elektrische Feld an ' +
-            'jeder Stelle gerade ist: oben und hell ist ein Wellenberg, unten und dunkel ein ' +
-            'Wellental.\n\n' +
-            'Die orange Klammer misst den Abstand von einem Berg zum nächsten: genau eine ' +
-            'Wellenlänge λ. In Zeitlupe siehst du, wie die Berge nach vorn laufen — die Klammer ' +
-            'läuft mit.',
+            'Ein Laser sendet Licht mit genau einer Wellenlänge. Licht ist eine Welle: An jeder ' +
+            'Stelle schwingt ein elektrisches Feld hin und her.\n\n' +
+            'Hier siehst du die Welle genau von der Seite. Die weiße Linie zeigt das Feld in ' +
+            'diesem Moment: oben ein Wellenberg, unten ein Wellental. Von Berg zu Berg ist es ' +
+            'eine Wellenlänge λ (orange Klammer). In Zeitlupe laufen die Berge nach rechts.\n\n' +
+            'Echtes Licht ist winzig — im Bild ist es stark vergrößert.',
+        },
+        {
+          kamera: { position: [-7, 3.4, 6.2], ziel: [-2.6, 0, 0] },
+          sichtbar: ['laser', 'einfall'],
+          hilfen: ['profil', 'lambdaMass'],
+          tempo: 'zeitlupe',
+          text:
+            'Der Lichtstrahl ist breit, nicht nur eine Linie. Darum zeigt das Bild die Welle auf ' +
+            'einer ganzen Fläche: hoch und hell ist ein Berg, tief und dunkel ein Tal.',
         },
         {
           kamera: { position: [-2.6, 9, 0.01], ziel: [-2.6, 0, 0] },
           sichtbar: ['laser', 'einfall'],
+          hilfen: ['lambdaMass'],
           text:
-            'Von oben sieht man: Die Wellenberge liegen auf geraden Linien quer zur Laufrichtung. ' +
-            'Entlang einer solchen Linie schwingt das Licht überall im Gleichtakt — alle Punkte ' +
-            'erreichen im selben Moment ihren Berg. So eine Welle heißt ebene Welle.\n\n' +
-            'Dieser Gleichtakt ist der Schlüssel zu allem, was gleich passiert.',
+            'Von oben: Die Berge liegen auf geraden Linien quer zur Laufrichtung. Entlang so einer ' +
+            'Linie schwingt alles im Gleichtakt. Das nennt man eine ebene Welle.\n\n' +
+            'Dieser Gleichtakt ist der Schlüssel zu allem, was jetzt kommt.',
         },
         {
-          kamera: { position: [-8, 5, 7], ziel: [-1, 0, 0] },
+          kamera: { position: [-6.5, 4.5, 6.5], ziel: [-0.8, 0.4, 0] },
           sichtbar: ['laser', 'einfall', 'blende'],
+          hilfen: ['spaltMasse'],
           text:
-            'Jetzt trifft die Welle auf eine Blende. Die Blende ist schwarz und schluckt das ' +
-            'Licht. Nur durch die schmalen Spalte kommt es hindurch.',
+            'Jetzt steht eine Blende im Weg. Sie schluckt das Licht — nur durch zwei sehr ' +
+            'schmale Spalte kommt es hindurch. Die Spalte sind dünner als ein Haar.',
         },
       ],
     },
@@ -109,28 +133,28 @@ export const tourWelle: Tour = {
         {
           kamera: { position: [-1.4, 3.2, 5.4], ziel: [1.6, 0, 1.4] },
           text:
-            'Zuerst ist nur ein Spalt offen. Würde Licht einfach geradeaus fliegen, gäbe es ' +
-            'dahinter nur einen schmalen Lichtstreifen, so breit wie der Spalt. Stattdessen ' +
-            'breitet es sich hinter dem Spalt kreisförmig aus.',
+            'Zuerst ist nur ein Spalt offen. Flöge Licht wie kleine Kügelchen geradeaus, käme ' +
+            'dahinter nur ein schmaler Strahl heraus. Stattdessen breitet sich die Welle in ' +
+            'Halbkreisen nach allen Seiten aus.',
         },
         {
           kamera: 'draufsicht',
           text:
-            'Warum? Nach dem Huygens-Prinzip wird jeder Punkt, den eine Welle erreicht, selbst ' +
-            'zum Ausgangspunkt einer kleinen Kreiswelle (Elementarwelle). Vor der Blende liegen ' +
-            'unzählig viele nebeneinander und ergeben zusammen wieder die gerade Welle.\n\n' +
-            'Im schmalen Spalt bleiben nur wenige übrig — von dort läuft eine Kreiswelle nach ' +
-            'vorn in alle Richtungen. Dieses Auffächern heißt Beugung.',
+            'Warum? Huygens-Prinzip: Jeder Punkt, den eine Welle erreicht, sendet selbst eine ' +
+            'kleine Kreiswelle aus. Viele nebeneinander ergeben zusammen wieder eine gerade ' +
+            'Front.\n\n' +
+            'Im schmalen Spalt bleiben nur wenige übrig — heraus kommt eine Kreiswelle. Dieses ' +
+            'Auffächern heißt Beugung.',
         },
         {
           kamera: { position: [2, 7, 9], ziel: [9, 0.8, 0] },
+          hilfen: ['schirmMass'],
           text:
-            'Auf dem Schirm entsteht dadurch ein breiter heller Fleck statt eines scharfen ' +
-            'Streifens.\n\n' +
-            'Zieh an der Spaltbreite b: Je schmaler der Spalt, desto weniger Elementarwellen ' +
-            'bleiben übrig und desto stärker fächert das Licht auf — der Fleck wird breiter.\n\n' +
-            'In echt ist der Spalt etwa [[bDurchLambda]] Wellenlängen breit; dort fächert das ' +
-            'Licht nur bis etwa [[thetaHuelle]] zur Seite auf. Im Bild ist das stark übertrieben.',
+            'Ein Schirm fängt das Licht auf. Weil es auffächert, entsteht dort ein breiter ' +
+            'heller Fleck.\n\n' +
+            'Zieh an der Spaltbreite b: Je schmaler der Spalt, desto stärker fächert das Licht ' +
+            'auf und desto breiter wird der Fleck. In echt fächert es nur um etwa ' +
+            '[[thetaHuelle]] auf — im Bild ist das stark übertrieben.',
         },
       ],
     },
@@ -139,25 +163,26 @@ export const tourWelle: Tour = {
       freieRegler: ['d'],
       teile: [
         {
-          kamera: { position: [-1.8, 4, 5.2], ziel: [1.8, 0, 0] },
+          kamera: { position: [-2.4, 4.3, 5.8], ziel: [0.8, 0.2, 0] },
+          hilfen: ['spaltMasse'],
           text:
-            'Jetzt ist auch der zweite Spalt offen. Dieselbe gerade Wellenfront erreicht beide ' +
-            'Spalte im selben Moment. Darum starten beide Kreiswellen im Gleichtakt: Wenn am ' +
-            'einen Spalt ein Berg losläuft, läuft auch am anderen gerade ein Berg los.',
+            'Jetzt sind beide Spalte offen. Hinter jedem entsteht eine Kreiswelle.\n\n' +
+            'Wichtig: Dieselbe gerade Wellenfront erreicht beide Spalte gleichzeitig. Darum ' +
+            'starten beide Kreiswellen im Gleichtakt — Berg mit Berg.',
         },
         {
           kamera: kopie(UEBERBLICK),
           text:
-            'Hinter der Blende laufen die beiden Kreiswellen ineinander. Es entstehen helle ' +
-            'Bahnen, die fächerförmig zum Schirm laufen, und dazwischen ruhige graue Bahnen. Auf ' +
-            'dem Schirm wird daraus ein Muster aus hellen und dunklen Streifen.\n\n' +
-            'Warum es genau dort hell und dort dunkel ist, zeigen die nächsten beiden Schritte.',
+            'Hinter der Blende laufen die beiden Kreiswellen ineinander. Es entstehen Bahnen, in ' +
+            'denen es stark wogt, und ruhige graue Bahnen dazwischen. Auf dem Schirm wird daraus ' +
+            'ein Muster aus hellen und dunklen Streifen.\n\n' +
+            'Warum genau dort? Das zeigen die nächsten beiden Schritte.',
         },
         {
           kamera: kopie(UEBERBLICK),
           text:
-            'Zieh am Spaltabstand d: Die Kreiswellen starten weiter auseinander, die hellen ' +
-            'Bahnen liegen dichter, und die Streifen auf dem Schirm rücken zusammen.',
+            'Zieh am Spaltabstand d: Liegen die Spalte weiter auseinander, rücken die Streifen ' +
+            'zusammen. Warum, wird in Schritt 7 klar.',
         },
       ],
     },
@@ -169,23 +194,21 @@ export const tourWelle: Tour = {
           auswahl: hell4,
           tempo: 'zeitlupe',
           text:
-            'Schauen wir uns einen einzelnen Punkt an (orange markiert). Hier kommen die Wellen ' +
-            'beider Spalte an — die weißen Linien zeigen ihre Wege.\n\n' +
-            'In Zeitlupe siehst du: Der Punkt schwingt besonders stark auf und ab. Denn hier ' +
-            'kommt von beiden Spalten im selben Moment ein Berg an. Die Berge addieren sich zu ' +
-            'einem fast doppelt so hohen Berg, danach die Täler zu einem fast doppelt so tiefen ' +
-            'Tal. Das heißt konstruktive Interferenz: Hier ist es hell.',
+            'Treffen zwei Wellen aufeinander, addieren sich ihre Auslenkungen. Schau auf den ' +
+            'orangen Punkt; die weißen Linien sind die Wege von den beiden Spalten.\n\n' +
+            'Hier kommt von beiden Spalten gleichzeitig ein Berg an. Berg plus Berg gibt einen ' +
+            'doppelt so hohen Berg — der Punkt schwingt stark. Das heißt konstruktive ' +
+            'Interferenz: hell.',
         },
         {
           kamera: nahAn(dunkel4),
           auswahl: dunkel4,
           tempo: 'zeitlupe',
           text:
-            'Ein Stück daneben ist es ganz anders: Hier kommt vom einen Spalt ein Berg an, ' +
-            'während vom anderen gerade ein Tal ankommt. Berg und Tal heben sich auf — der Punkt ' +
-            'bleibt fast in Ruhe. Das heißt destruktive Interferenz: Hier ist es dunkel.\n\n' +
-            'Die ruhigen grauen Bahnen bestehen aus lauter solchen Punkten. Warum gerade dort ' +
-            'Berg auf Tal trifft, zeigt der nächste Schritt.',
+            'Ein Stück daneben kommt vom einen Spalt ein Berg, vom anderen ein Tal. Sie heben ' +
+            'sich auf — der Punkt bleibt fast in Ruhe. Das heißt destruktive Interferenz: ' +
+            'dunkel.\n\n' +
+            'Aber warum trifft gerade hier Berg auf Tal? Das zeigt der nächste Schritt.',
         },
       ],
     },
@@ -197,42 +220,46 @@ export const tourWelle: Tour = {
           umschalter: true,
           auswahl: ersterHell,
           text:
-            'Von oben sieht man die beiden Wege, die das Licht von den zwei Spalten bis zu einem ' +
-            'Punkt P auf dem Schirm zurücklegt. Sie sind fast nie gleich lang. Den Unterschied ' +
-            'nennt man Gangunterschied Δs.\n\n' +
-            'Um ihn zu sehen, trägt man von P aus die Länge des kürzeren Wegs auf dem längeren ab ' +
-            '(grau gestrichelt). Was vom längeren Weg übrig bleibt, ist Δs (orange).\n\n' +
-            'P ist hier der erste helle Streifen neben der Mitte: Δs ist genau eine Wellenlänge. ' +
-            'Die eine Welle kommt also eine ganze Schwingung später an — und damit wieder im ' +
-            'Gleichtakt: Berg trifft auf Berg → hell.',
+            'Beide Wellen starten im Gleichtakt. Ob sie sich verstärken oder auslöschen, hängt ' +
+            'also nur davon ab, wie weit jede bis zum Punkt laufen muss.\n\n' +
+            'Von oben siehst du die Wege s₁ und s₂ zu einem Punkt P auf dem Schirm. Trägt man ' +
+            's₁ auf s₂ ab (gestrichelt), bleibt der Unterschied übrig: der Gangunterschied Δs ' +
+            '(orange).\n\n' +
+            'Hier ist Δs genau eine Wellenlänge. Die eine Welle ist eine ganze Schwingung ' +
+            'später dran — und damit wieder im Gleichtakt: Berg auf Berg → hell.',
         },
         {
           kamera: 'draufsicht',
           umschalter: true,
           auswahl: ersterDunkel,
           text:
-            'Jetzt liegt P auf dem dunklen Streifen gleich daneben: Δs ist 1,5 Wellenlängen. Die ' +
-            'eine Welle ist eine halbe Schwingung verschoben: Berg trifft auf Tal → dunkel.\n\n' +
-            'Die Regel: Ist Δs eine ganze Zahl von Wellenlängen (0, 1 λ, 2 λ …), ist es hell. Ist ' +
-            'Δs eine halbe Zahl (0,5 λ, 1,5 λ …), ist es dunkel.',
+            'Einen Streifen weiter ist P dunkel: Δs ist 1,5 Wellenlängen. Eine halbe Schwingung ' +
+            'verschoben heißt Berg auf Tal → Auslöschung.\n\n' +
+            'Die Regel: Δs ganzzahlig (0, 1, 2 … λ) → hell. Δs halbzahlig (0,5; 1,5 … λ) → ' +
+            'dunkel.',
         },
         {
-          kamera: { position: [0.5, 6.5, 0.01], ziel: [0.5, 0, 0] },
+          // Lupe an die Spalte, aber weit genug, dass Blende, Δs und beide Winkel θ zu sehen sind.
+          kamera: { position: [0.7, 6.2, 0.01], ziel: [0.7, 0, 0] },
           umschalter: true,
           auswahl: ersterHell,
           text:
-            'Ganz nah an den Spalten: Das kleine Dreieck hat als lange Seite den Spaltabstand d ' +
-            'und als kurze Seite Δs. Der Winkel darin ist derselbe Winkel θ, unter dem P von der ' +
-            'Blende aus gesehen wird. Für einen weit entfernten Schirm gilt darum:',
+            'Lupe auf die Spalte: d, Δs und die gestrichelte Linie bilden ein kleines Dreieck. ' +
+            'Weil der Schirm weit weg ist, laufen die Wege fast parallel — das Dreieck ist ' +
+            'rechtwinklig.\n\n' +
+            'Sein Winkel ist derselbe Winkel θ, unter dem P von der Blendenmitte aus liegt ' +
+            '(beide Schenkel sind jeweils um 90° gedreht). Darum gilt sin θ = Δs / d, also:',
           formeln: ['\\Delta s = d \\cdot \\sin\\theta'],
         },
         {
           kamera: 'draufsicht',
           umschalter: true,
+          auswahl: ersterHell,
+          punktWaehlen: true,
           text:
-            'Probier es selbst: Klick mit der linken Maustaste auf hellen und dunklen Streifen ' +
-            'am Schirm oder auf Stellen im Wellenfeld und vergleiche Δs. Mit dem Mausrad kannst ' +
-            'du an das Dreieck heranzoomen.',
+            'Jetzt du: Schieb P mit ▲ ▼ (oder den Pfeiltasten ↑ ↓) von Streifen zu Streifen, ' +
+            'oder klick auf den Schirm. Mit jedem Schritt wächst Δs um eine halbe Wellenlänge: ' +
+            'hell, dunkel, hell …',
         },
       ],
     },
@@ -243,26 +270,24 @@ export const tourWelle: Tour = {
           kamera: kopie(AUF_SCHIRM),
           hilfen: ['ordnungen'],
           text:
-            'Die hellen Streifen werden von der Mitte aus durchgezählt: Der mittlere hat die ' +
-            'Ordnung m = 0 (beide Wege gleich lang), dann folgen nach beiden Seiten m = 1, 2, 3 … ' +
-            'Beim Streifen m ist der Gangunterschied genau m Wellenlängen. Die dunklen Streifen ' +
-            'liegen genau dazwischen.',
+            'Die hellen Streifen werden von der Mitte aus gezählt: m = 0, 1, 2, 3 … Beim ' +
+            'Streifen m ist der Gangunterschied genau m Wellenlängen: Δs = m · λ.',
         },
         {
-          kamera: kopie(AUF_SCHIRM),
+          kamera: 'draufsicht',
           hilfen: ['ordnungen'],
           auswahl: zweiterHell,
           text:
-            'Beispiel m = 2: Die Welle vom ferneren Spalt kommt genau zwei Schwingungen später ' +
-            'an — und trotzdem im Gleichtakt.',
+            'Beispiel m = 2: Der Weg vom ferneren Spalt ist genau zwei Wellenlängen länger. Zwei ' +
+            'ganze Schwingungen später — wieder im Gleichtakt → hell.',
         },
         {
           kamera: kopie(AUF_SCHIRM),
           hilfen: ['ordnungen'],
           text:
             'Nach außen werden die Streifen dunkler. Das liegt am Einzelspalt aus Schritt 2: ' +
-            'Jeder einzelne Spalt schickt schräg nach außen weniger Licht. Das Streifenmuster ' +
-            'sitzt sozusagen unter dem breiten Fleck des Einzelspalts (der „Hülle").',
+            'Jeder Spalt schickt zur Seite weniger Licht. Die Streifen sitzen unter diesem ' +
+            'breiten Fleck, der Hülle.',
         },
       ],
     },
@@ -277,23 +302,19 @@ export const tourWelle: Tour = {
           kamera: 'draufsicht',
           umschalter: true,
           text:
-            'Jetzt lässt sich alles zusammensetzen: Hell ist es, wo Δs = m · λ. Aus dem Dreieck ' +
-            'wissen wir Δs = d · sin θ. Zusammen ergibt das die Bedingung für die hellen ' +
-            'Streifen:',
-          formeln: [
-            'd \\cdot \\sin\\theta_m = m \\cdot \\lambda',
-            '\\sin\\theta_1 = \\frac{\\lambda}{d} = \\frac{[[lambda]]}{[[d]]} \\;\\Rightarrow\\; \\theta_1 = [[theta1]]',
-          ],
+            'Jetzt passt alles zusammen: Hell ist es bei Δs = m · λ (Schritt 6), und ' +
+            'Δs = d · sin θ (Schritt 5). Gleichgesetzt:',
+          formeln: ['d \\cdot \\sin\\theta_m = m \\cdot \\lambda'],
         },
         {
-          kamera: kopie(AUF_SCHIRM),
-          hilfen: ['ordnungen'],
+          kamera: 'draufsicht',
           umschalter: true,
+          auswahl: ersterHell,
+          hilfen: ['ordnungen'],
           text:
-            'In echt sind die Winkel winzig (θ₁ = [[theta1]]). Für so kleine Winkel ist ' +
-            'sin θ ≈ tan θ = x / L, wobei x der Abstand des Streifens von der Mitte auf dem ' +
-            'Schirm ist. Eingesetzt: d · x / L = m · λ. Der Abstand zweier benachbarter Streifen ' +
-            'ist darum:',
+            'Wo liegt der Streifen auf dem Schirm? Im großen Dreieck aus L (bis zum Schirm) und ' +
+            'x (Abstand von der Mitte) gilt tan θ = x / L. Weil die Winkel winzig sind, ist ' +
+            'sin θ ≈ tan θ. Damit folgt der Abstand zweier Streifen:',
           formeln: [
             '\\Delta x \\approx \\frac{\\lambda \\cdot L}{d} = \\frac{[[lambda]] \\cdot [[L]]}{[[d]]} = [[deltaX]]',
           ],
@@ -303,12 +324,9 @@ export const tourWelle: Tour = {
           hilfen: ['ordnungen'],
           umschalter: true,
           text:
-            'Probier die Regler aus: Größere Wellenlänge oder größerer Schirmabstand → Streifen ' +
-            'weiter auseinander. Größerer Spaltabstand → Streifen enger. Genau das sagt die ' +
-            'Formel.\n\n' +
-            'Der Spalt ist in diesem Schritt besonders schmal eingestellt (b = [[b]]), damit die ' +
-            'Formel genau passt. Bei breiteren Spalten rücken die Streifen durch die Hülle ' +
-            'leicht nach innen — die Formel ist eine Näherung für schmale Spalte.',
+            'Probier die Regler: Größere Wellenlänge oder größerer Schirmabstand → Streifen ' +
+            'weiter auseinander. Größerer Spaltabstand → enger. Genau das sagt die Formel.\n\n' +
+            '(Der Spalt ist hier extra schmal, dann stimmt die Formel genau.)',
           formeln: [
             '\\Delta x \\approx \\frac{\\lambda \\cdot L}{d} = \\frac{[[lambda]] \\cdot [[L]]}{[[d]]} = [[deltaX]]',
           ],
@@ -322,26 +340,24 @@ export const tourWelle: Tour = {
         {
           kamera: kopie(UEBERBLICK),
           werte: { lambda: 650e-9 },
+          hilfen: ['ordnungen'],
           text:
-            'Rotes Licht (λ = [[lambda]]) hat eine lange Wellenlänge. Der Gangunterschied ' +
-            'erreicht erst unter einem größeren Winkel eine ganze Wellenlänge — die Streifen ' +
-            'liegen weit auseinander: Δx = [[deltaX]].',
+            'Rotes Licht hat eine längere Wellenlänge. Eine ganze Wellenlänge Gangunterschied ' +
+            'wird erst unter größerem Winkel erreicht — die Streifen liegen weiter auseinander.',
         },
         {
           kamera: kopie(UEBERBLICK),
           werte: { lambda: 450e-9 },
-          text:
-            'Blaues Licht (λ = [[lambda]]) hat eine kürzere Wellenlänge. Eine ganze Wellenlänge ' +
-            'Gangunterschied ist schneller erreicht — die Streifen rücken zusammen: ' +
-            'Δx = [[deltaX]].',
+          hilfen: ['ordnungen'],
+          text: 'Blaues Licht hat eine kürzere Wellenlänge — die Streifen rücken zusammen.',
         },
         {
           kamera: kopie(AUF_SCHIRM),
+          hilfen: ['ordnungen'],
           text:
-            'Und weißes Licht? Es enthält alle Farben gleichzeitig. Jede Farbe macht ihr eigenes ' +
-            'Streifenmuster. Nur in der Mitte (m = 0) liegen alle übereinander, dort bleibt es ' +
-            'weiß. Daneben entstehen farbige Säume: innen blau, außen rot.\n\n' +
-            'Zieh an der Wellenlänge und beobachte Farbe und Streifenabstand.',
+            'Weißes Licht enthält alle Farben, jede macht ihr eigenes Muster. Nur in der Mitte ' +
+            'liegen alle übereinander, dort bleibt es weiß; daneben entstehen farbige Säume.\n\n' +
+            'Zieh an der Wellenlänge und vergleiche.',
         },
       ],
     },
@@ -354,9 +370,8 @@ export const tourWelle: Tour = {
           kamera: kopie(AUF_SCHIRM),
           hilfen: ['ordnungen'],
           text:
-            'Die Spaltbreite b bestimmt, wie stark jeder einzelne Spalt das Licht auffächert ' +
-            '(Schritt 2). Das Streifenmuster sitzt unter dieser Einzelspalt-Hülle: Wo die Hülle ' +
-            'hell ist, sind die Streifen hell, wo sie dunkel wird, verschwinden sie.',
+            'Die Spaltbreite b bestimmt, wie stark jeder Spalt auffächert. Die Streifen sitzen ' +
+            'unter dieser Hülle: Wo sie dunkel wird, verschwinden die Streifen.',
         },
         {
           // Zum fehlenden Streifen hin gedreht, sonst liegt er unter dem Seitenfeld.
@@ -364,30 +379,27 @@ export const tourWelle: Tour = {
           hilfen: ['ordnungen'],
           auswahl: fehlender,
           text:
-            'Hier ist der Spaltabstand genau dreimal so groß wie die Spaltbreite (d = [[d]], ' +
-            'b = [[b]]). Dann fällt der Streifen m = 3 genau auf eine Stelle, an der sich schon ' +
-            'das Licht innerhalb jedes einzelnen Spalts auslöscht (Einzelspalt-Minimum). Obwohl ' +
-            'Δs = 3 λ ist, bleibt es dort dunkel — der Streifen fehlt.',
+            'Hier ist der Spaltabstand genau dreimal so groß wie die Spaltbreite. Dann fällt der ' +
+            'Streifen m = 3 genau auf eine Stelle, an der sich das Licht schon innerhalb jedes ' +
+            'Spalts auslöscht. Obwohl Δs = 3 λ ist, bleibt es dunkel — der Streifen fehlt.',
         },
         {
           kamera: kopie(AUF_SCHIRM),
           hilfen: ['ordnungen'],
           text:
-            'Zieh an der Spaltbreite b: Schmalere Spalte fächern stärker auf, die Hülle wird ' +
-            'breiter, und mehr Streifen werden sichtbar. Breitere Spalte machen die Hülle ' +
-            'schmaler. Wo die Streifen liegen, ändert sich dabei kaum — das bestimmt der ' +
-            'Spaltabstand d, nicht b.',
+            'Zieh an b: Schmalere Spalte → breitere Hülle → mehr Streifen sichtbar. Wo die ' +
+            'Streifen liegen, bestimmt aber d, nicht b.',
         },
         {
           kamera: kopie(UEBERBLICK),
           text:
-            'Damit ist das Wellenbild vollständig: Beugung an jedem Spalt, Überlagerung der ' +
-            'beiden Kreiswellen, Gangunterschied, Formel, Farbe und Hülle.\n\n' +
-            'Aber Licht hat noch eine zweite Seite. Was passiert, wenn man es so schwach macht, ' +
-            'dass nur noch einzelne Lichtteilchen (Photonen) durch die Spalte gehen? Das ist das ' +
-            'Thema der nächsten Phase.',
+            'Damit ist das Wellenbild komplett: Beugung, Überlagerung, Gangunterschied, Formel, ' +
+            'Farbe und Hülle.\n\n' +
+            'Aber was passiert, wenn das Licht so schwach ist, dass nur noch einzelne ' +
+            'Lichtteilchen (Photonen) durch die Spalte gehen? Das ist die nächste Phase.',
         },
       ],
     },
   ],
 };
+

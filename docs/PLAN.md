@@ -414,6 +414,58 @@ dem Seitenfeld). Jede Behauptung eines Texts über einen vorgewählten Punkt (�
 **Ungeprüft:** wie flüssig die Teilwechsel wirken, und ob die Texte für Kurt verständlich
 sind — dafür ist die Abnahme da.
 
+#### Überarbeitung nach Kurts erster Rückmeldung (27.10.2026)
+Rückmeldung: zu viel freies Ausprobieren; überall Zahlen ins Bild (Längen, Winkel); beim
+Dreieck die Draufsicht so, dass man das *ganze* Dreieck sieht; Schritt 1 von der Seite (2D);
+Tour aus Sicht eines 13.-Klässlers ohne Vorwissen zum Versuch durchspielen; Fehler: nach dem
+Verstellen eines Reglers setzte „weiter" scheinbar nur den Schritt zurück.
+
+- **Fehler „weiter"**: nachgestellt mit echten Maus-/Tastenereignissen (Chrome-Fernsteuerung).
+  Ein Mausklick auf „Weiter" ging, aber der gezogene Regler behielt den Tastaturfokus — die
+  Pfeiltaste → schob dann den Regler statt weiterzublättern. Jetzt gibt der Regler den Fokus
+  beim Loslassen ab (`regler.ts`); geprüft: ziehen → → landet im nächsten Schritt.
+- **Punkt nicht mehr frei**: Klick ins Wellenfeld geht nicht mehr. P liegt auf dem Schirm und
+  springt mit ▲▼ (Knöpfe im Kasten „Punkt P") oder ↑↓ von Streifen zu Streifen, in halben
+  Wellenlängen (hell → dunkel → hell). Ein Klick auf den Schirm rastet am nächsten Streifen
+  ein. In der Tour nur in **einem** Teil wählbar (`punktWaehlen`, Schritt 5 Teil 4), sonst fest;
+  im freien Modus immer. Naht: `Experiment.streifen()`.
+- **Zahlen im Bild** (echte Werte): λ-Klammer „λ = 500 nm"; Dreieck mit s₁, s₂ (in mm auf
+  5 Stellen — erst dort unterscheiden sie sich), Δs, θ (zweimal: Blendenmitte und kleines
+  Dreieck), d, L, x und dünner Linie Blendenmitte → P (zweiter Schenkel von θ, Hypotenuse des
+  großen Dreiecks). Neue Hilfen `spaltMasse` (b, d) und `schirmMass` (L). Hinweis oben links
+  sagt jetzt „Alle Zahlen — im Bild und rechts — sind echte Werte".
+- **Draufsicht mit Punkt** rahmt das ganze Dreieck (Blende bis P) statt des ganzen Felds —
+  außer P ist wählbar (könnte sonst aus dem Rahmen springen).
+- **Schritt 1** beginnt seitlich: nur die Welle als Kurve (Hilfe `profil`, gleiche Formel wie
+  der Shader) mit „Berg", „Tal" und λ-Klammer; danach fährt die Kamera hoch auf die Fläche.
+  Neuer Teil 4: Blende mit Maßen b und d.
+- **Texte**: aus Sicht eines 13.-Klässlers durchgespielt. Nachgetragen: Überlagerungsprinzip
+  vor Schritt 4, Schirm mit L eingeführt (Schritt 2), Gangunterschied als s₂ − s₁ mit echten
+  Weglängen, warum θ zweimal gleich ist, tan θ = x/L am großen Dreieck. Punkte in Schritt 4
+  sind „einfach" (nur Wege, ohne Δs und Kasten) — Δs kommt erst in Schritt 5. Kasten „Punkt P"
+  steht unter dem Tour-Text, damit man nicht Formeln vor der Herleitung liest.
+- Winkel überall mit 2 Nachkommastellen (vorher stand im Bild 0,286°, in der Formel 0,29°).
+
+**Ergebnis:** 143 Tests grün (neu: Springen, Einrasten, Rand, echte Weglängen, „einfache"
+Punkte vor Schritt 5, nur ein wählbarer Teil). Alle 29 Teile als Bildschirmfoto angesehen.
+
+#### Zweite Rückmeldung (27.10.2026)
+- **Beschriftungen** 17 px statt 15 px. Wo eine Beschriftung abseits steht, zeigt ein dünner
+  Hinweisstrich auf ihr Ziel (`beschriftung.ts`); d am Dreieck hat eine eigene Maßklammer.
+- **Schritt 1 exakt von der Seite auf die 3D-Fläche**: Ansichten können einen eigenen
+  Öffnungswinkel haben (`Ansicht.sichtfeld`). 1,5° aus 120 Einheiten Abstand ist fast ohne
+  Perspektive — alle Wellenreihen liegen übereinander. 0,6° von oben, weil eine Fläche exakt
+  von der Kante unsichtbar dünn wäre. Die Welle als weiße Linie darüber (Grün auf Grün wäre
+  unsichtbar). Kamerafahrt überblendet dabei die sichtbare Bildhöhe, nicht den Abstand.
+- **„warum"-Satz beim Regler**: in der Tour weg (der Tour-Text sagt dasselbe), im freien Modus
+  bleibt er, steht aber **unter** den Reglern. Zusätzlich scrollt das Seitenfeld beim Ziehen
+  so nach, dass der Regler unter der Maus bleibt. Gemessen: Reglerposition beim Ziehen in
+  Schritt 2, 8 und im freien Modus unverändert.
+- **Texte** gekürzt, weniger Zahlen und Formeln im Text (die Zahlen stehen im Bild). Kasten
+  „Punkt P" auf einen Satz und eine Formel gekürzt.
+
+144 Tests grün. **Abnahme durch Kurt offen.**
+
 ### Schritt 7 — Freier Modus
 Alle Regler frei, Experiment-Auswahl auf der Startseite.
 **Prüfung:** jeder Regler über seinen ganzen Bereich ohne Absturz oder Unsinn.

@@ -39,6 +39,11 @@ export interface Punkt {
   z: number;
   /** Auf dem Schirm angeklickt: bleibt auf dem Schirm, auch wenn der sich verschiebt. */
   aufSchirm: boolean;
+  /**
+   * Nur markieren und die Wege zeigen — ohne Dreieck, Zahlen und Erklärkasten. Für Tour-Teile,
+   * die vor der Erklärung des Gangunterschieds liegen (Formeln erst nach der Herleitung).
+   */
+  einfach?: boolean;
 }
 
 export interface ExperimentSzene {
@@ -75,8 +80,17 @@ export interface Experiment {
   erklaerung: { formeln: string[]; text: string };
   /** Startansicht im freien Modus. */
   ansicht: Ansicht;
-  /** Blick senkrecht von oben, passend zum aktuellen Aufbau. */
-  draufsicht(werte: Werte): Ansicht;
+  /**
+   * Blick senkrecht von oben, passend zum aktuellen Aufbau. Mit Punkt so gerahmt, dass das
+   * ganze Dreieck von der Blende bis zum Punkt zu sehen ist (Kurt, 27.10.2026).
+   */
+  draufsicht(werte: Werte, punkt?: Punkt | null): Ansicht;
+  /**
+   * Punkt auf dem Schirm an einem hellen oder dunklen Streifen. schritt 0 = der nächstgelegene
+   * (zum Einrasten nach einem Klick), ±1 = zum nächsten Streifen in ±z-Richtung (Maximum →
+   * Minimum → Maximum …). Ohne Punkt beginnt es in der Mitte. null = hier gibt es keine Streifen.
+   */
+  streifen(werte: Werte, punkt: Punkt | null, schritt: -1 | 0 | 1): Punkt | null;
   /** Erklärung zu einem angeklickten Punkt. */
   auswahl(werte: Werte, punkt: Punkt): AuswahlInhalt;
   /** Eine Tour je Phase (Welle, Quanten, Elektronen), in Lernreihenfolge. */

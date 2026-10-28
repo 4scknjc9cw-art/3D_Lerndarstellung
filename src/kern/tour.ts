@@ -17,6 +17,12 @@ import type { Tempo } from './zeit';
 export interface Ansicht {
   position: [number, number, number];
   ziel: [number, number, number];
+  /**
+   * Öffnungswinkel der Kamera in Grad (Standard 45). Sehr klein und weit weg = fast ohne
+   * Perspektive, wie eine Zeichnung — nötig für den exakten Blick von der Seite in Schritt 1,
+   * sonst liegen nahe und ferne Wellenreihen nicht übereinander.
+   */
+  sichtfeld?: number;
 }
 
 export interface TourTeil {
@@ -33,6 +39,11 @@ export interface TourTeil {
   umschalter?: boolean;
   /** Ein Punkt, der für die Erklärung schon angeklickt ist. */
   auswahl?: Punkt;
+  /**
+   * Ob man den Punkt selbst wählen darf (Klick auf den Schirm, ▲▼). Sonst ist er fest —
+   * Kurt: frei Herumklicken ist zu viel, man soll von Streifen zu Streifen springen.
+   */
+  punktWaehlen?: boolean;
   /** Werte, die dieser Teil setzt (zusätzlich zu den Startwerten des Schritts). */
   werte?: Partial<Werte>;
   /** Tempo der Animation in diesem Teil; fehlt es, läuft sie normal. */

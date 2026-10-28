@@ -11,12 +11,12 @@ import { alsText } from '../../kern/format';
 import type { Werte } from '../../kern/parameter';
 import { darstellungsAufbau } from './darstellung';
 import { aufbauAus } from './aufbau';
-import { konstruiere } from './konstruktion';
+import { echteGroessen, konstruiere } from './konstruktion';
 
 const LAMBDA: Einheit = { zeichen: 'λ', faktor: 1, stellen: 2, tex: '\\,\\lambda' };
 const NM: Einheit = { zeichen: 'nm', faktor: 1e-9, stellen: 0 };
 const MM2: Einheit = { zeichen: 'mm', faktor: 1e-3, stellen: 2 };
-const GRAD: Einheit = { zeichen: '°', faktor: Math.PI / 180, stellen: 3 };
+const GRAD: Einheit = { zeichen: '°', faktor: Math.PI / 180, stellen: 2 };
 
 /** Toleranz in Wellenlängen, ab der ein Punkt als „hell" bzw. „dunkel" gilt. */
 const TOLERANZ = 0.1;
@@ -28,8 +28,7 @@ export function auswahlInhalt(werte: Werte, punkt: Punkt): AuswahlInhalt {
   const k = konstruiere(bild, { x, y: punkt.z });
   const q = k.gangunterschied / bild.wellenlaenge;
 
-  const ds = q * echt.wellenlaenge;
-  const theta = Math.asin(Math.min(1, ds / echt.spaltabstand));
+  const { ds, theta, x: abstandEcht } = echteGroessen(echt, q);
   const m = Math.round(q);
   const rest = Math.abs(q - m);
   const u = (Math.PI * q * echt.spaltbreite) / echt.spaltabstand;
@@ -37,46 +36,38 @@ export function auswahlInhalt(werte: Werte, punkt: Punkt): AuswahlInhalt {
 
   // „genau" nur, wenn auch die angezeigte Zahl (2 Nachkommastellen) exakt passt — sonst stünde
   // „genau 2 Wellenlängen" neben „1,99 λ". Sonst ehrlich „fast genau".
+  // Kurz gehalten (Kurt: knackig, wenige Zahlen) — die Zahlen stehen im Bild am Dreieck.
   const genau = rest < 0.005 || Math.abs(rest - 0.5) < 0.005 ? 'genau' : 'fast genau';
   let urteil: string;
   if (rest <= TOLERANZ) {
     urteil =
       m === 0
-        ? `Beide Wege sind ${genau === 'genau' ? '' : 'fast '}gleich lang. Die Wellen kommen im Gleichtakt an, Berg trifft auf ` +
-          'Berg → hell. Das ist der helle Streifen in der Mitte (0. Ordnung).'
-        : `Δs ist ${genau} ${m === 1 ? 'eine Wellenlänge' : `${m} Wellenlängen`}. Die eine ` +
-          'Welle ist also um ganze Schwingungen „verspätet" und kommt trotzdem im Gleichtakt an: ' +
-          `Berg trifft auf Berg → hell (Maximum ${m}. Ordnung).`;
+        ? `Beide Wege sind ${genau === 'genau' ? '' : 'fast '}gleich lang → Berg trifft auf Berg → hell. ` +
+          'Der helle Streifen in der Mitte (0. Ordnung).'
+        : `Δs ist ${genau} ${m === 1 ? 'eine Wellenlänge' : `${m} Wellenlängen`} → ganze ` +
+          `Schwingungen später, wieder im Gleichtakt → hell (Maximum ${m}. Ordnung).`;
     if (huelle < 0.05) {
       urteil +=
-        ' Aber: Genau hier löscht sich schon das Licht innerhalb jedes einzelnen Spalts aus ' +
-        '(Einzelspalt-Minimum). Darum fehlt dieser helle Streifen.';
+        ' Aber hier löscht sich schon das Licht innerhalb jedes einzelnen Spalts aus ' +
+        '(Einzelspalt-Minimum) — darum fehlt dieser Streifen.';
     }
   } else if (rest >= 0.5 - TOLERANZ) {
     const unten = Math.floor(q);
     urteil =
-      `Δs ist ${genau} ${unten === 0 ? 'eine halbe Wellenlänge' : `${unten},5 Wellenlängen`}. Die eine ` +
-      'Welle ist eine halbe Schwingung verschoben: Berg trifft auf Tal → die Wellen löschen ' +
-      'sich aus → dunkel.';
+      `Δs ist ${genau} ${unten === 0 ? 'eine halbe Wellenlänge' : `${unten},5 Wellenlängen`} → ` +
+      'eine halbe Schwingung verschoben → Berg trifft auf Tal → dunkel.';
   } else {
     urteil =
-      'Δs liegt zwischen ganz und halb. Die Wellen verstärken sich nur teilweise → mittlere ' +
-      'Helligkeit, zwischen einem hellen und einem dunklen Streifen.';
+      'Δs liegt zwischen ganz und halb → die Wellen verstärken sich nur teilweise → mittlere ' +
+      'Helligkeit.';
   }
 
-  const ort = punkt.aufSchirm
-    ? `Auf dem echten Schirm liegt dieser Punkt ${alsText({
-        wert: echt.schirmabstand * Math.tan(theta),
-        einheit: MM2,
-      })} neben der Mitte.`
-    : 'Klickst du auf den Schirm, siehst du auch, wie weit der Punkt dort von der Mitte entfernt ist.';
-
   return {
-    formeln: [
-      '\\Delta s = [[q]] = [[ds]]',
-      '\\sin\\theta \\approx \\frac{\\Delta s}{d} = \\frac{[[ds]]}{[[d]]} \\;\\Rightarrow\\; \\theta = [[thetaP]]',
-    ],
-    text: `${urteil}\n\nIn echt entspricht das dem Winkel [[thetaP]]. ${ort}`,
+    formeln: ['\\Delta s = [[q]] = [[ds]]'],
+    text: punkt.aufSchirm
+      ? `${urteil}\n\nAuf dem echten Schirm: ${alsText({ wert: abstandEcht, einheit: MM2 })} ` +
+        'neben der Mitte, Winkel θ = [[thetaP]].'
+      : urteil,
     groessen: {
       q: { wert: q, einheit: LAMBDA },
       ds: { wert: ds, einheit: NM },

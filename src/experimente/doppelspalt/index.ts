@@ -3,7 +3,8 @@
 import type { Einheit, Experiment } from '../../kern/experiment';
 import { aufbauAus } from './aufbau';
 import { auswahlInhalt } from './auswahl';
-import { darstellungsAufbau } from './darstellung';
+import { darstellungsAufbau, SCHIRM_HALB } from './darstellung';
+import { naechsterStreifen } from './konstruktion';
 import { maximumWinkel, standardAufbau, streifenabstand } from './physik';
 import { DoppelspaltSzene } from './szene';
 import { tourElektronen } from './tour-elektronen';
@@ -114,13 +115,36 @@ export const doppelspalt: Experiment = {
 
   ansicht: { position: [-7, 13, 18], ziel: [3.5, 0, 0] },
 
-  draufsicht(werte) {
+  draufsicht(werte, punkt) {
     // Von oben: Bildschirm-rechts = Ausbreitung (+x), Bildschirm-oben = −z. Höhe so, dass die
     // ganze Breite (16) bei 45° Blickwinkel hineinpasst. Winziger z-Versatz, weil ein Blick
     // exakt senkrecht nach unten für die Kamerasteuerung keine eindeutige Richtung hat.
-    const L = darstellungsAufbau(aufbauAus(werte)).schirmabstand;
-    const mitte = (L - 6.5) / 2;
-    return { position: [mitte, 22, 0.01], ziel: [mitte, 0, 0] };
+    const bild = darstellungsAufbau(aufbauAus(werte));
+    const L = bild.schirmabstand;
+    if (!punkt || punkt.einfach) {
+      const mitte = (L - 6.5) / 2;
+      return { position: [mitte, 22, 0.01], ziel: [mitte, 0, 0] };
+    }
+    // Mit Punkt: Rahmen um das ganze Dreieck — Blende (beide Spalte) bis zum Punkt, mit Rand
+    // für die Beschriftungen. Die freie Fläche links vom Seitenfeld ist etwa 1,1-mal so breit
+    // wie die Kamerahöhe und 0,83-mal so hoch (45° Blickwinkel, Bildschirm ≈ 16:9).
+    const x = punkt.aufSchirm ? L : Math.min(punkt.x, L);
+    const zMin = Math.min(-bild.spaltabstand / 2, punkt.z) - 1.2;
+    const zMax = Math.max(bild.spaltabstand / 2, punkt.z) + 1.2;
+    const xMin = -3.6; // links Platz für die Beschriftungen d und Δs
+    const xMax = x + 3; // rechts Platz für „x = … mm" neben dem Schirm
+    const hoehe = Math.max((xMax - xMin) / 1.05, (zMax - zMin) / 0.72, 6);
+    const mx = (xMin + xMax) / 2;
+    const mz = (zMin + zMax) / 2;
+    return { position: [mx, hoehe, mz + 0.01], ziel: [mx, 0, mz] };
+  },
+
+  streifen(werte, punkt, schritt) {
+    const bild = darstellungsAufbau(aufbauAus(werte));
+    if (bild.spalte === 1) return null; // ein Spalt: keine zwei Wege, keine Streifen
+    // Ohne Punkt (oder mit einem im Wellenfeld) geht es in der Mitte los.
+    const z = punkt?.aufSchirm ? punkt.z : 0;
+    return { x: 99, z: naechsterStreifen(bild, z, punkt?.aufSchirm ? schritt : 0, SCHIRM_HALB), aufSchirm: true };
   },
 
   auswahl: auswahlInhalt,

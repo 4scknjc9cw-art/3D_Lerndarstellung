@@ -6,7 +6,7 @@
 // Schulbuch. Für weit entfernte Punkte wird das Dreieck rechtwinklig, und es gilt Δs = d·sin θ.
 // Bewusst exakt statt mit Lot: dann stimmt Δs auch nahe am Spalt, wo die Wege nicht parallel sind.
 
-import { type Aufbau, spaltMitte } from './physik';
+import { type Aufbau, gangunterschied, spaltMitte } from './physik';
 
 export interface Punkt2 {
   x: number;
@@ -20,6 +20,64 @@ export interface Konstruktion {
   q: Punkt2; // auf dem langen Weg, |Q P| = |nah P|
   gangunterschied: number; // |fern Q| = |fern P| − |nah P|  (≥ 0)
   winkel: number; // θ: Richtung von der Blendenmitte zu P gegen die Achse (Vorzeichen = Seite)
+}
+
+/**
+ * Echte Größen zu einem Punkt mit Gangunterschied q (in Wellenlängen) — die Brücke vom Bild
+ * zum echten Aufbau (siehe auswahl.ts): Δs = q·λ, d·sin θ = Δs, x = L·tan θ, und daraus die
+ * beiden echten Weglängen von den Spaltmitten bis zum Schirmpunkt.
+ */
+export function echteGroessen(echt: Aufbau, q: number) {
+  const ds = Math.abs(q) * echt.wellenlaenge;
+  const theta = Math.asin(Math.min(1, ds / echt.spaltabstand));
+  const x = echt.schirmabstand * Math.tan(theta);
+  const halbD = echt.spaltabstand / 2;
+  return {
+    ds,
+    theta,
+    x,
+    wegNah: Math.hypot(echt.schirmabstand, x - halbD),
+    wegFern: Math.hypot(echt.schirmabstand, x + halbD),
+  };
+}
+
+/**
+ * Stelle z auf dem Bild-Schirm mit vorzeichenbehaftetem Gangunterschied q·λ (Bisektion; Δs
+ * wächst mit z). null, wenn sie neben dem Schirm läge.
+ */
+export function schirmStelle(bild: Aufbau, q: number, halbeBreite: number): number | null {
+  const ziel = q * bild.wellenlaenge;
+  if (Math.abs(ziel) > gangunterschied(bild, halbeBreite)) return null;
+  let lo = -halbeBreite;
+  let hi = halbeBreite;
+  for (let i = 0; i < 60; i++) {
+    const mitte = (lo + hi) / 2;
+    if (gangunterschied(bild, mitte) < ziel) lo = mitte;
+    else hi = mitte;
+  }
+  return (lo + hi) / 2;
+}
+
+/**
+ * Nächster Streifen auf dem Bild-Schirm. Streifen = halbe Vielfache von λ im Gangunterschied:
+ * ganze → hell, halbe → dunkel. schritt 0 rastet am nächstgelegenen ein, ±1 geht einen
+ * Streifen weiter in ±z. Am Rand des Schirms bleibt die Stelle stehen.
+ */
+export function naechsterStreifen(
+  bild: Aufbau,
+  z: number,
+  schritt: -1 | 0 | 1,
+  halbeBreite: number,
+): number {
+  const halbe = (2 * gangunterschied(bild, z)) / bild.wellenlaenge; // in halben λ
+  // Kleiner Spielraum, damit ein Punkt genau auf einem Streifen nicht an Rundung hängen bleibt.
+  const n =
+    schritt === 0
+      ? Math.round(halbe)
+      : schritt > 0
+        ? Math.floor(halbe + 1e-6) + 1
+        : Math.ceil(halbe - 1e-6) - 1;
+  return schirmStelle(bild, n / 2, halbeBreite) ?? z;
 }
 
 export function konstruiere(aufbau: Aufbau, ziel: Punkt2): Konstruktion {

@@ -3,15 +3,15 @@
 
 import * as THREE from 'three';
 import type { Punkt } from '../../kern/experiment';
-import { darstellungsAufbau } from './darstellung';
+import { darstellungsAufbau, SCHIRM_HALB } from './darstellung';
 import { wellenlaengeZuFarbe } from './farbe';
 import { konstruiere } from './konstruktion';
 import { KonstruktionsBild } from './konstruktionsbild';
-import { LambdaMass, Ordnungen } from './hilfen';
+import { LambdaMass, Masse, Ordnungen, Profil } from './hilfen';
 import { type Aufbau, feld, intensitaet } from './physik';
 import { setzeAufbau, wellenMaterial } from './wellenfeld';
 
-const BREITE = 16; // Ausdehnung quer zur Ausbreitung (z von −8 bis +8)
+const BREITE = 2 * SCHIRM_HALB; // Ausdehnung quer zur Ausbreitung (z von −8 bis +8)
 const VORLAUF = 5; // Strecke der ebenen Welle vor der Blende
 const PERIODE_SEK = 1.6; // eine Schwingung pro 1,6 s bei normalem Tempo
 const SCHIRM_PUNKTE = 1024;
@@ -34,8 +34,11 @@ export class DoppelspaltSzene {
   private schirm: THREE.Mesh;
   private konstruktion = new KonstruktionsBild();
   private bild?: Aufbau;
+  private echt?: Aufbau;
   private auswahl: Punkt | null = null;
   private lambdaMass = new LambdaMass();
+  private profil = new Profil();
+  private masse = new Masse();
   private ordnungen = new Ordnungen();
 
   constructor() {
@@ -65,7 +68,14 @@ export class DoppelspaltSzene {
     // Ebene zeigt danach in −x (zur Blende hin); u läuft dabei in +z.
     schirmGeo.rotateY(-Math.PI / 2);
     this.schirm = new THREE.Mesh(schirmGeo, new THREE.MeshBasicMaterial({ map: this.schirmTextur }));
-    this.gruppe.add(this.schirm, this.konstruktion.gruppe, this.lambdaMass.gruppe, this.ordnungen.gruppe);
+    this.gruppe.add(
+      this.schirm,
+      this.konstruktion.gruppe,
+      this.lambdaMass.gruppe,
+      this.profil.gruppe,
+      this.masse.gruppe,
+      this.ordnungen.gruppe,
+    );
 
     this.teile = new Map<string, THREE.Object3D>([
       ['laser', laserGruppe],
@@ -80,13 +90,15 @@ export class DoppelspaltSzene {
   readonly teile: Map<string, THREE.Object3D>;
 
   /** Hilfen, die nur auf Wunsch eines Tour-Teils erscheinen (nie im freien Modus). */
-  readonly hilfen = ['lambdaMass', 'ordnungen'];
+  readonly hilfen = ['lambdaMass', 'profil', 'spaltMasse', 'schirmMass', 'ordnungen'];
 
   zeigeHilfen(namen: readonly string[]): void {
     for (const name of namen) {
       if (!this.hilfen.includes(name)) throw new Error(`Unbekannte Hilfe: ${name}`);
     }
     this.lambdaMass.zeige(namen.includes('lambdaMass'));
+    this.profil.zeige(namen.includes('profil'));
+    this.masse.zeige(namen.includes('spaltMasse'), namen.includes('schirmMass'));
     this.ordnungen.zeige(namen.includes('ordnungen'));
   }
 
@@ -119,56 +131,43 @@ export class DoppelspaltSzene {
 
     this.baueBlende(bild);
     this.zeichneSchirm(bild, farbe);
-    this.lambdaMass.setzeWellenlaenge(bild.wellenlaenge);
-    this.ordnungen.setze(bild, BREITE / 2, this.schirm.position.y + 1.5);
+    this.lambdaMass.setzeWellenlaenge(bild.wellenlaenge, echt.wellenlaenge);
+    this.profil.setze(bild.wellenlaenge);
+    this.masse.setze(bild, echt, SCHIRM_HALB);
+    this.ordnungen.setze(bild, SCHIRM_HALB, this.schirm.position.y + 1.5);
     this.bild = bild;
+    this.echt = echt;
     // Ändert sich der Aufbau, wandert die Konstruktion mit (z. B. Schirm bei neuem L).
     this.zeigeAuswahl(this.auswahl);
   }
 
   /**
-   * Klick als Strahl: trifft er das Wellenfeld (Ebene y = 0) oder den Schirm? Gerechnet gegen
-   * die mathematischen Ebenen statt gegen das Gitter — das hat 150 000 Punkte und wäre pro
-   * Klick unnötig langsam. Die Wellenhöhe (±0,22) spielt beim Zielen keine Rolle.
+   * Klick als Strahl: trifft er den Schirm? Gerechnet gegen die mathematische Ebene statt gegen
+   * das Gitter. Ins Wellenfeld klicken geht bewusst nicht (Kurt: der Punkt soll sich nur auf
+   * dem Schirm bewegen, von Streifen zu Streifen).
    */
   trefferpunkt(strahl: THREE.Ray): Punkt | null {
     // Beim Einzelspalt gibt es keine zwei Wege und damit keinen Gangunterschied.
-    if (!this.bild || this.bild.spalte === 1) return null;
+    if (!this.bild || this.bild.spalte === 1 || !this.schirm.visible) return null;
     const L = this.bild.schirmabstand;
-    const kandidaten: { punkt: Punkt; abstand: number }[] = [];
     const treffer = new THREE.Vector3();
-
-    if (this.feld.visible && strahl.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), treffer)) {
-      if (treffer.x > 0.05 && treffer.x <= L && Math.abs(treffer.z) <= BREITE / 2) {
-        kandidaten.push({
-          punkt: { x: treffer.x, z: treffer.z, aufSchirm: false },
-          abstand: strahl.origin.distanceTo(treffer),
-        });
-      }
-    }
     const schirmEbene = new THREE.Plane(new THREE.Vector3(-1, 0, 0), L + 0.05);
-    if (this.schirm.visible && strahl.intersectPlane(schirmEbene, treffer)) {
-      const y = treffer.y - this.schirm.position.y;
-      if (Math.abs(treffer.z) <= BREITE / 2 && Math.abs(y) <= 1.5) {
-        kandidaten.push({
-          punkt: { x: L, z: treffer.z, aufSchirm: true },
-          abstand: strahl.origin.distanceTo(treffer),
-        });
-      }
-    }
-    kandidaten.sort((a, b) => a.abstand - b.abstand);
-    return kandidaten[0]?.punkt ?? null;
+    if (!strahl.intersectPlane(schirmEbene, treffer)) return null;
+    const y = treffer.y - this.schirm.position.y;
+    if (Math.abs(treffer.z) > SCHIRM_HALB || Math.abs(y) > 1.5) return null;
+    return { x: L, z: treffer.z, aufSchirm: true };
   }
 
   zeigeAuswahl(punkt: Punkt | null): void {
     this.auswahl = punkt;
-    if (!punkt || !this.bild || this.bild.spalte === 1) {
+    if (!punkt || !this.bild || !this.echt || this.bild.spalte === 1) {
       this.konstruktion.zeige(false);
       return;
     }
     const L = this.bild.schirmabstand;
     const x = punkt.aufSchirm ? L : Math.min(punkt.x, L);
-    this.konstruktion.zeichne(konstruiere(this.bild, { x, y: punkt.z }));
+    const k = konstruiere(this.bild, { x, y: punkt.z });
+    this.konstruktion.zeichne(k, this.bild, this.echt, punkt.aufSchirm, !!punkt.einfach);
     this.konstruktion.zeige(true);
   }
 
@@ -178,6 +177,7 @@ export class DoppelspaltSzene {
     this.feldMaterial.uniforms.uPhase.value = phase;
     this.einfallMaterial.uniforms.uPhase.value = phase;
     this.lambdaMass.folge(phase);
+    this.profil.folge(phase);
   }
 
   /** Waagerechtes Gitter von x = 0 bis laenge, z über die ganze Breite. */

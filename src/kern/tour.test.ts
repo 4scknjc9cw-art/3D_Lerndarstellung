@@ -87,7 +87,7 @@ describe('Tour-Maschine', () => {
 describe('Echte Tour „Licht als Welle"', () => {
   const tour = doppelspalt.touren[0];
   const teile = ['laser', 'einfall', 'blende', 'feld', 'schirm'];
-  const hilfen = ['lambdaMass', 'ordnungen'];
+  const hilfen = ['lambdaMass', 'profil', 'spaltMasse', 'schirmMass', 'ordnungen'];
 
   it('lädt ohne Fehler, alle Teile, Hilfen und Platzhalter gültig', () => {
     expect(() => new TourSpieler(tour, new Parameter(doppelspalt.parameter), start)).not.toThrow();
@@ -118,7 +118,9 @@ describe('Echte Tour „Licht als Welle"', () => {
       'Warum hell und dunkel: der Gangunterschied/0': 'Maximum 1. Ordnung',
       'Warum hell und dunkel: der Gangunterschied/1': 'genau 1,5 Wellenlängen',
       'Warum hell und dunkel: der Gangunterschied/2': 'Maximum 1. Ordnung',
+      'Warum hell und dunkel: der Gangunterschied/3': 'Maximum 1. Ordnung',
       'Das Muster auf dem Schirm/1': 'Maximum 2. Ordnung',
+      'Die Formel/1': 'Maximum 1. Ordnung',
       'Spaltbreite: die Hülle und fehlende Streifen/1': 'fehlt',
     };
     let geprueft = 0;
@@ -131,7 +133,22 @@ describe('Echte Tour „Licht als Welle"', () => {
         geprueft++;
       }),
     );
-    expect(geprueft).toBe(7); // ersterHell kommt in Schritt 5 zweimal vor (Teil 0 und 2)
+    expect(geprueft).toBe(9); // ersterHell kommt mehrfach vor (Schritt 5 und 7)
+  });
+
+  it('Punkte vor Schritt 5 sind „einfach" (Δs wird erst dort erklärt), danach nicht', () => {
+    const i = tour.schritte.findIndex((s) => s.titel.startsWith('Warum hell'));
+    tour.schritte.forEach((s, si) =>
+      s.teile.forEach((t) => {
+        if (t.auswahl) expect(!!t.auswahl.einfach).toBe(si < i);
+      }),
+    );
+  });
+
+  it('wenig freies Herumprobieren: P ist nur in genau einem Teil selbst wählbar', () => {
+    const waehlbar = tour.schritte.flatMap((s) => s.teile.filter((t) => t.punktWaehlen));
+    expect(waehlbar).toHaveLength(1);
+    expect(waehlbar[0].auswahl?.aufSchirm).toBe(true);
   });
 
   it('Schritt „Ein Spalt" hat nur einen offenen Spalt, danach wieder zwei', () => {

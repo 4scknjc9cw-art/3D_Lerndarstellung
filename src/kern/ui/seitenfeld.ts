@@ -33,6 +33,8 @@ export function seitenfeld(
   element: HTMLElement;
   starte(modus: Modus, schritt?: number, teil?: number): void;
   setzeDraufsicht(an: boolean, sofort?: boolean): void;
+  /** Darf man gerade selbst einen Punkt wählen (Klick auf den Schirm, ▲▼)? */
+  punktWaehlbar(): boolean;
 } {
   const feld = document.createElement('aside');
   feld.className = 'seitenfeld';
@@ -73,7 +75,7 @@ export function seitenfeld(
   const knopfOben = knopf('Draufsicht', '', () => setzeDraufsicht(true));
   ansichtLeiste.append(knopf3d, knopfOben);
 
-  const erklaerung = new Erklaerfeld(experiment, parameter, auswahl);
+  const erklaerung = new Erklaerfeld(experiment, parameter, auswahl, (r) => springe(r));
   const reglerTitel = document.createElement('h2');
   reglerTitel.textContent = 'Ausprobieren';
   const regler = new ReglerListe(parameter, experiment.parameter);
@@ -86,17 +88,47 @@ export function seitenfeld(
 
   const inhalt = document.createElement('div');
   inhalt.className = 'inhalt';
-  inhalt.append(kopf, ansichtLeiste, erklaerung.element, reglerTitel, regler.element);
+  inhalt.append(kopf, ansichtLeiste, erklaerung.element, reglerTitel, regler.element, erklaerung.warum);
+
+  // Der Regler bleibt beim Ziehen unter der Maus (Kurt): ändert sich darüber Text (Zahlen,
+  // Zeilenumbrüche, Kasten zum Punkt), wird das Seitenfeld um genau so viel nachgescrollt.
+  let anker: { regler: HTMLElement; oben: number } | null = null;
+  regler.element.addEventListener('pointerdown', (e) => {
+    const zeile = (e.target as HTMLElement).closest<HTMLElement>('.regler');
+    anker = zeile ? { regler: zeile, oben: zeile.getBoundingClientRect().top } : null;
+  });
+  window.addEventListener('pointerup', () => (anker = null));
+  parameter.beobachte(() => {
+    if (!anker) return;
+    inhalt.scrollTop += anker.regler.getBoundingClientRect().top - anker.oben;
+  });
   feld.append(modusLeiste, inhalt, navigation);
 
   let modus: Modus = 'tour';
+  let waehlbar = false;
   /** Die 3D-Ansicht, zu der „3D-Ansicht" zurückkehrt. */
   let ansicht3d: Ansicht = experiment.ansicht;
 
   function setzeDraufsicht(an: boolean, sofort = false): void {
     knopf3d.classList.toggle('aktiv', !an);
     knopfOben.classList.toggle('aktiv', an);
-    fahrt.fahre(an ? experiment.draufsicht(parameter.alle) : ansicht3d, sofort);
+    // Mit festem Punkt rahmt die Draufsicht das ganze Dreieck von der Blende bis zum Punkt ein.
+    // Ist der Punkt wählbar, könnte er aus dem Rahmen springen — dann das ganze Feld zeigen.
+    const punkt = waehlbar ? null : auswahl.aktuell;
+    fahrt.fahre(an ? experiment.draufsicht(parameter.alle, punkt) : ansicht3d, sofort);
+  }
+
+  function setzeWaehlbar(an: boolean): void {
+    waehlbar = an;
+    erklaerung.setzeWaehlbar(an);
+  }
+
+  /** Punkt zum nächsten Streifen schieben; ohne Punkt beginnt er in der Mitte. */
+  function springe(richtung: -1 | 1): void {
+    if (!waehlbar) return;
+    const jetzt = auswahl.aktuell;
+    const neu = experiment.streifen(parameter.alle, jetzt, jetzt ? richtung : 0);
+    if (neu) auswahl.setze(neu);
   }
 
   const zeigeStelle = (schritt: TourSchritt, stelle: Stelle) => {
@@ -113,9 +145,11 @@ export function seitenfeld(
     punkte.hidden = schritt.teile.length < 2;
 
     erklaerung.setzeInhalt(...schritt.teile.slice(0, stelle.teil + 1));
+    erklaerung.setzeWarum(false);
     reglerTitel.hidden = !regler.zeigeNur(schritt.freieRegler ?? []);
     szene.zeige(teil.sichtbar ?? null);
     szene.zeigeHilfen(teil.hilfen ?? []);
+    setzeWaehlbar(!!teil.punktWaehlen);
     auswahl.setze(teil.auswahl ?? null);
     zeit.setze(teil.tempo ?? 'normal');
 
@@ -155,10 +189,12 @@ export function seitenfeld(
       titel.textContent = experiment.titel;
       punkte.hidden = true;
       erklaerung.setzeInhalt(experiment.erklaerung);
+      erklaerung.setzeWarum(true);
       reglerTitel.hidden = !regler.zeigeNur(null);
       szene.zeige(null);
       szene.zeigeHilfen([]);
       auswahl.setze(null);
+      setzeWaehlbar(true);
       ansicht3d = experiment.ansicht;
       ansichtLeiste.hidden = false;
       setzeDraufsicht(false);
@@ -166,8 +202,15 @@ export function seitenfeld(
   }
 
   window.addEventListener('keydown', (e) => {
-    // Pfeiltasten auf einem Regler bewegen den Regler, nicht die Tour.
-    if (modus !== 'tour' || (e.target as HTMLElement).tagName === 'INPUT') return;
+    // Pfeiltasten auf einem Regler bewegen den Regler, nicht die Tour. (Mit der Maus gezogene
+    // Regler geben den Fokus beim Loslassen ab, siehe regler.ts.)
+    if ((e.target as HTMLElement).tagName === 'INPUT') return;
+    // ↑ ↓ schieben den Punkt von Streifen zu Streifen, ← → blättern in der Tour.
+    if (waehlbar && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      springe(e.key === 'ArrowUp' ? -1 : 1);
+    }
+    if (modus !== 'tour') return;
     if (e.key === 'ArrowRight') spieler?.weiter();
     if (e.key === 'ArrowLeft') spieler?.zurueck();
   });
@@ -180,5 +223,6 @@ export function seitenfeld(
       setzeModus(start);
     },
     setzeDraufsicht,
+    punktWaehlbar: () => waehlbar,
   };
 }

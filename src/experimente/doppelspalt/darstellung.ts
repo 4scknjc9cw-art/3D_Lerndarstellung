@@ -21,6 +21,8 @@ const BEZUG = {
 };
 
 export const SCHIRM_MIN = 6;
+/** Halbe Breite von Schirm und Wellenfeld quer zur Achse (z von −8 bis +8). */
+export const SCHIRM_HALB = 8;
 export const SCHIRM_MAX = 18;
 
 export function darstellungsAufbau(echt: Aufbau): Aufbau {

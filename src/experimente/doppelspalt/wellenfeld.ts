@@ -7,6 +7,9 @@ import type { Aufbau } from './physik';
 import { offeneSpalte, punktquellen } from './physik';
 
 export const MAX_QUELLEN = 64; // beide Spalte zusammen
+/** Höhe eines Wellenbergs im Bild und Verstärkung der einfallenden Welle (siehe welle()). */
+export const WELLEN_HOEHE = 0.22;
+export const EINFALL_SKALA = 0.8;
 
 const gemeinsam = /* glsl */ `
   uniform float uK;
@@ -77,8 +80,8 @@ export function wellenMaterial(einfallend: boolean): THREE.ShaderMaterial {
       uRmin: { value: 0.05 },
       // Hinter der Blende kommt physikalisch viel weniger an als davor. Die Anzeige wird dort
       // bewusst verstärkt, sonst sieht man die Interferenz kaum — die Rechnung bleibt gleich.
-      uSkala: { value: einfallend ? 0.8 : 2.2 },
-      uHoehe: { value: 0.22 },
+      uSkala: { value: einfallend ? EINFALL_SKALA : 2.2 },
+      uHoehe: { value: WELLEN_HOEHE },
       uEinfallend: { value: einfallend ? 1 : 0 },
       uFarbe: { value: new THREE.Color(0.3, 1, 0.3) },
     },

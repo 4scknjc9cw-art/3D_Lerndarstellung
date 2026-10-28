@@ -32,6 +32,9 @@ export class ReglerListe {
       schieber.addEventListener('input', () => {
         parameter.setze(def.schluessel, Number(schieber.value) * f);
       });
+      // Nach dem Loslassen den Tastaturfokus abgeben. Sonst bewegen die Pfeiltasten danach den
+      // Regler statt die Tour weiterzublättern (Kurts Fehlermeldung, 27.10.2026).
+      schieber.addEventListener('pointerup', () => schieber.blur());
 
       zeile.append(kopf, schieber);
       this.element.appendChild(zeile);

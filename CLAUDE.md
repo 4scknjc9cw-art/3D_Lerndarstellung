@@ -23,11 +23,18 @@ dort nachtragen. Der Plan ist ein lebendes Dokument.
   Klick, Gangunterschied-Dreieck) ✅ als Tour-Schritt 3. 84 Tests grün.
 - 27.10.2026: Schritt 6 Tour-Inhalt ✅ gebaut: 9 Schritte / 27 Teile mit Kamerafahrt je Teil,
   136 Tests grün. **Abnahme durch Kurt offen.**
-- Nächster Schritt: Kurts Rückmeldung zur Tour einarbeiten, dann **Schritt 7** (Startseite,
-  Feinschliff). Auf Zuruf, nicht von selbst anfangen.
+- 27.10.2026: Kurts erste Rückmeldung eingearbeitet (Plan, Schritt 6 „Überarbeitung"): Punkt
+  springt nur noch von Streifen zu Streifen, Zahlen im Bild, Draufsicht aufs ganze Dreieck,
+  Schritt 1 seitlich, Texte neu, Weiter-Fehler behoben. 143 Tests grün.
+- 27.10.2026: zweite Rückmeldung: größere Beschriftungen mit Hinweisstrichen, Schritt 1 exakt
+  von der Seite auf die 3D-Fläche, kein „warum"-Feld in der Tour, Regler bleibt beim Ziehen
+  unter der Maus, Texte gekürzt. 144 Tests grün. **Abnahme offen.**
+- Nächster Schritt: Kurts Abnahme der Tour, dann **Schritt 7** (Startseite, Feinschliff).
+  Auf Zuruf, nicht von selbst anfangen.
 
 Kurts Regel für Tour-Texte: jeder Schritt erklärt **warum**, folgt dem Weg des Lichts, Formeln
-erst nach der Herleitung im Bild. Braucht ein Teil der Erklärung eine andere Ansicht, bekommt
+erst nach der Herleitung im Bild. Knapp formulieren, wenige Zahlen im Text — die Zahlen
+gehören ins Bild (groß lesbar, notfalls mit Hinweisstrich). Wenig freies Herumprobieren. Braucht ein Teil der Erklärung eine andere Ansicht, bekommt
 er einen eigenen Tour-Teil mit eigener Kamera. Behauptet ein Text etwas über einen
 vorgewählten Punkt, gehört ein Test dazu (`tour.test.ts`).
 
@@ -79,5 +86,9 @@ Flüssigkeit der Animation und Kamerafahrten, Lesbarkeit der Texte — braucht K
   Bildrate dort ist bedeutungslos (keine Grafikkarte). Prüfhilfen in der Adresse:
   `?kamera=x,y,z,zielX,zielY,zielZ`, `?werte=d:0.0002,lambda:6.5e-7` (SI), `?fps`,
   `?schritt=5&teil=3`, `?frei`, `?draufsicht`, `?klick=x,z` (x = 99 = Schirm).
+- Bedienung (Klicks, Tasten, Regler ziehen) lässt sich nur mit echten Eingabe-Ereignissen
+  prüfen, nicht mit `element.click()` — der Weiter-Fehler war ein Fokus-Problem. Dafür Chrome
+  mit `--remote-debugging-port` starten und `Input.dispatchMouseEvent`/`dispatchKeyEvent`
+  schicken (Node hat WebSocket eingebaut, kein Zusatzpaket nötig).
 - Neue Reglerbereiche immer gegen `index.test.ts` (alle Reglerecken) laufen lassen — dort ist
   schon einmal ein ineinanderlaufender Spalt aufgefallen.

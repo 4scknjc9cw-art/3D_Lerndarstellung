@@ -27,7 +27,8 @@ scene.add(licht);
 
 const experiment = doppelspalt;
 
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+// Weite Sicht (400), weil die fast perspektivlose Seitenansicht in Schritt 1 von weit weg schaut.
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 400);
 camera.position.set(...experiment.ansicht.position);
 const steuerung = new OrbitControls(camera, renderer.domElement);
 steuerung.target.set(...experiment.ansicht.ziel);
@@ -47,13 +48,14 @@ const auswahl = new Auswahl();
 auswahl.beobachte((punkt) => experimentSzene.zeigeAuswahl(punkt));
 
 // Linksklick = Punkt anklicken. Nur ein echter Klick zählt, kein Ziehen (Regel: links ist frei
-// für genau das, Drehen liegt auf rechts).
+// für genau das, Drehen liegt auf rechts). Nur wo der Punkt wählbar ist, und er rastet am
+// nächsten hellen oder dunklen Streifen ein (Kurt: nicht frei beweglich).
 let klickStart: { x: number; y: number } | null = null;
 renderer.domElement.addEventListener('pointerdown', (e) => {
   klickStart = e.button === 0 ? { x: e.clientX, y: e.clientY } : null;
 });
 renderer.domElement.addEventListener('pointerup', (e) => {
-  if (e.button !== 0 || !klickStart) return;
+  if (e.button !== 0 || !klickStart || !feld.punktWaehlbar()) return;
   if (Math.hypot(e.clientX - klickStart.x, e.clientY - klickStart.y) > 5) return;
   const ndc = new THREE.Vector2(
     (e.clientX / window.innerWidth) * 2 - 1,
@@ -62,7 +64,8 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   const strahl = new THREE.Raycaster();
   strahl.setFromCamera(ndc, camera);
   const punkt = experimentSzene.trefferpunkt(strahl.ray);
-  if (punkt) auswahl.setze(punkt);
+  const eingerastet = punkt && experiment.streifen(parameter.alle, punkt, 0);
+  if (eingerastet) auswahl.setze(eingerastet);
 });
 
 const zeit = new Zeit();
@@ -73,7 +76,7 @@ const hinweis = document.createElement('div');
 hinweis.className = 'hinweis';
 hinweis.innerHTML =
   '<b>Nicht maßstabsgetreu:</b> Im Bild ist die Wellenlänge stark vergrößert, die Winkel ' +
-  'sind dadurch viel größer als in echt. Alle Zahlen rechts sind echte Werte.';
+  'sind dadurch viel größer als in echt. Alle Zahlen — im Bild und rechts — sind echte Werte.';
 document.body.appendChild(hinweis);
 
 const feld = seitenfeld(experiment, parameter, experimentSzene, fahrt, auswahl, zeit);
